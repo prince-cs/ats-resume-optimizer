@@ -6,6 +6,7 @@ const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
 const apiKeyInput = document.getElementById('api-key-input');
 const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
+const modelInput = document.getElementById('model-input');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
 const settingsStatus = document.getElementById('settings-status');
 
@@ -39,18 +40,23 @@ const tabPanels = document.querySelectorAll('.tab-panel');
 let activeTabUrl = '';
 let activeTabTitle = '';
 let geminiApiKey = '';
+let geminiModelName = 'gemini-2.0-flash';
 let isPdfDetected = false;
 let extractedResumeText = '';
 let analysisResults = null;
 
 // Initialize Extension Sidepanel
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Load API Key
-  const data = await chrome.storage.local.get(['geminiApiKey']);
+  // 1. Load API Settings
+  const data = await chrome.storage.local.get(['geminiApiKey', 'geminiModelName']);
   if (data.geminiApiKey) {
     geminiApiKey = data.geminiApiKey;
     apiKeyInput.value = geminiApiKey;
-    setSettingsStatus('API Key loaded.', 'success');
+    if (data.geminiModelName) {
+      geminiModelName = data.geminiModelName;
+      modelInput.value = geminiModelName;
+    }
+    setSettingsStatus('API Settings loaded.', 'success');
   } else {
     setSettingsStatus('Please set your Gemini API Key.', 'error');
     settingsPanel.classList.remove('hidden');
@@ -84,13 +90,15 @@ function setupEventListeners() {
   // Save Settings
   saveSettingsBtn.addEventListener('click', async () => {
     const key = apiKeyInput.value.trim();
+    const model = modelInput.value.trim() || 'gemini-2.0-flash';
     if (!key) {
       setSettingsStatus('API Key cannot be empty.', 'error');
       return;
     }
-    await chrome.storage.local.set({ geminiApiKey: key });
+    await chrome.storage.local.set({ geminiApiKey: key, geminiModelName: model });
     geminiApiKey = key;
-    setSettingsStatus('API Key saved successfully!', 'success');
+    geminiModelName = model;
+    setSettingsStatus('API Settings saved successfully!', 'success');
     setTimeout(() => {
       settingsPanel.classList.add('hidden');
       settingsStatus.textContent = '';
@@ -316,7 +324,7 @@ async function extractTextFromPdf(pdfUrl) {
 
 // Call Gemini 1.5 Pro to analyze the resume and generate the Overleaf LaTeX template
 async function callGeminiApi(resumeText, jobDescription) {
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`;
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`;
 
   const systemInstruction = `You are a world-class senior tech recruiter, hiring manager, and LaTeX typesetting expert.
 Your job is to analyze a candidate's resume against a target job description and tailor the resume so that:

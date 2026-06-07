@@ -29,7 +29,10 @@
           <input type="password" id="api-key-input" placeholder="Enter Gemini API Key..." />
           <button id="toggle-password-visibility" class="text-button">Show</button>
         </div>
-        <button id="save-settings-btn" class="primary-btn">Save Key</button>
+        <div class="model-input-wrapper">
+          <input type="text" id="model-input" placeholder="Model Name (e.g. gemini-2.0-flash)" value="gemini-2.0-flash" title="Gemini Model Name" />
+        </div>
+        <button id="save-settings-btn" class="primary-btn">Save Settings</button>
       </div>
       <div id="settings-status" class="status-msg"></div>
     </section>
