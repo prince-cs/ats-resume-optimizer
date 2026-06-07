@@ -458,16 +458,74 @@ Your job is to analyze a candidate's resume against a target job description and
 4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without packages that require non-standard fonts.
 
 CRITICAL INSTRUCTIONS FOR LATEX:
-- Use clean, standard packages: article, latexsym, fullpage, titlesec, marvosym, color, verbatim, enumitem, hyperref, fancyhdr, babel, tabularx.
-- Do NOT use fonts that are not in the standard TeX Live package list. Standard fonts like computer modern (default) are fine.
-- Structure sections and headers clearly.
-- Each professional experience entry MUST use bullet points (\\begin{itemize} ... \\end{itemize}) for candidate accomplishments.
-- For all experience and education bullet lists, use compact margins via enumitem parameters, for example: \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
-- Align company name/location and job title/dates on separate lines using \\hfill, for example:
-  \\noindent \\textbf{Company Name} \\hfill \\textbf{Location} \\\\
-  \\noindent \\textit{Job Title} \\hfill \\textit{Month Year -- Month Year}
-- Do not use tables (tabular/tabularx) for experience sections because tables can confuse ATS parsers. Rely on simple text blocks and \\hfill.
-- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped (e.g. use \\& for ampersands).
+- You MUST use the following specific LaTeX document structure and layout template. Do not change command names or section styles:
+  
+  \\documentclass[letterpaper,11pt]{article}
+  \\usepackage{latexsym}
+  \\usepackage[empty]{fullpage}
+  \\usepackage{titlesec}
+  \\usepackage{marvosym}
+  \\usepackage[usenames,dvipsnames]{color}
+  \\usepackage{verbatim}
+  \\usepackage{enumitem}
+  \\usepackage[hidelinks]{hyperref}
+  \\usepackage{fancyhdr}
+  \\usepackage[english]{babel}
+  \\usepackage{tabularx}
+  \\input{glyphtounicode}
+  
+  \\pagestyle{fancy}
+  \\fancyhf{} % clear all header and footer fields
+  \\renewcommand{\\headrulewidth}{0pt}
+  \\renewcommand{\\footrulewidth}{0pt}
+  
+  % Adjust margins
+  \\addtolength{\\oddsidemargin}{-0.5in}
+  \\addtolength{\\evensidemargin}{-0.5in}
+  \\addtolength{\\textwidth}{1.0in}
+  \\addtolength{\\topmargin}{-.5in}
+  \\addtolength{\\textheight}{1.0in}
+  
+  \\urlstyle{same}
+  \\raggedbottom
+  \\raggedright
+  
+  % Sections formatting
+  \\titleformat{\\section}{
+    \\vspace{-4pt}\\scshape\\raggedright\\large\\bfseries
+  }{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]
+  
+  \\pdfgentounicode=1
+  
+  % Custom commands
+  \\newcommand{\\resumeItem}[1]{
+    \\item\\small{
+      {#1 \\vspace{-2pt}}
+    }
+  }
+  
+  \\newcommand{\\resumeSubheading}[4]{
+    \\vspace{-2pt}\\item
+      \\begin{tabular*}{0.97\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
+        \\textbf{#1} & #2 \\\\
+        \\textit{#3} & \\textit{#4} \\\\
+      \\end{tabular*}\\vspace{-7pt}
+  }
+  
+  \\begin{document}
+  
+  % Center-aligned header with name and contact details
+  \\begin{center}
+      {\\Huge \\scshape Candidate Name} \\\\ \\vspace{1pt}
+      \\small Phone Number $|$ Location $|$ \\href{mailto:email@address.com}{email@address.com} $|$ \\href{https://linkedin.com/in/username}{linkedin.com/in/username}
+  \\end{center}
+  
+  % Sections should include: Summary, Skills, Experience, Education.
+  % Make sure experience bullet points use:
+  % \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
+  %   \\resumeItem{accomplishment bullet point}
+  % \\end{itemize}
+  
 - Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}, \\hfill, \\\\).
 - Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
 
@@ -638,16 +696,74 @@ Your job is to analyze a candidate's resume against a target job description and
 4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without packages that require non-standard fonts.
 
 CRITICAL INSTRUCTIONS FOR LATEX:
-- Use clean, standard packages: article, latexsym, fullpage, titlesec, marvosym, color, verbatim, enumitem, hyperref, fancyhdr, babel, tabularx.
-- Do NOT use fonts that are not in the standard TeX Live package list. Standard fonts like computer modern (default) are fine.
-- Structure sections and headers clearly.
-- Each professional experience entry MUST use bullet points (\\begin{itemize} ... \\end{itemize}) for candidate accomplishments.
-- For all experience and education bullet lists, use compact margins via enumitem parameters, for example: \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
-- Align company name/location and job title/dates on separate lines using \\hfill, for example:
-  \\noindent \\textbf{Company Name} \\hfill \\textbf{Location} \\\\
-  \\noindent \\textit{Job Title} \\hfill \\textit{Month Year -- Month Year}
-- Do not use tables (tabular/tabularx) for experience sections because tables can confuse ATS parsers. Rely on simple text blocks and \\hfill.
-- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped (e.g. use \\& for ampersands).
+- You MUST use the following specific LaTeX document structure and layout template. Do not change command names or section styles:
+  
+  \\documentclass[letterpaper,11pt]{article}
+  \\usepackage{latexsym}
+  \\usepackage[empty]{fullpage}
+  \\usepackage{titlesec}
+  \\usepackage{marvosym}
+  \\usepackage[usenames,dvipsnames]{color}
+  \\usepackage{verbatim}
+  \\usepackage{enumitem}
+  \\usepackage[hidelinks]{hyperref}
+  \\usepackage{fancyhdr}
+  \\usepackage[english]{babel}
+  \\usepackage{tabularx}
+  \\input{glyphtounicode}
+  
+  \\pagestyle{fancy}
+  \\fancyhf{} % clear all header and footer fields
+  \\renewcommand{\\headrulewidth}{0pt}
+  \\renewcommand{\\footrulewidth}{0pt}
+  
+  % Adjust margins
+  \\addtolength{\\oddsidemargin}{-0.5in}
+  \\addtolength{\\evensidemargin}{-0.5in}
+  \\addtolength{\\textwidth}{1.0in}
+  \\addtolength{\\topmargin}{-.5in}
+  \\addtolength{\\textheight}{1.0in}
+  
+  \\urlstyle{same}
+  \\raggedbottom
+  \\raggedright
+  
+  % Sections formatting
+  \\titleformat{\\section}{
+    \\vspace{-4pt}\\scshape\\raggedright\\large\\bfseries
+  }{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]
+  
+  \\pdfgentounicode=1
+  
+  % Custom commands
+  \\newcommand{\\resumeItem}[1]{
+    \\item\\small{
+      {#1 \\vspace{-2pt}}
+    }
+  }
+  
+  \\newcommand{\\resumeSubheading}[4]{
+    \\vspace{-2pt}\\item
+      \\begin{tabular*}{0.97\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
+        \\textbf{#1} & #2 \\\\
+        \\textit{#3} & \\textit{#4} \\\\
+      \\end{tabular*}\\vspace{-7pt}
+  }
+  
+  \\begin{document}
+  
+  % Center-aligned header with name and contact details
+  \\begin{center}
+      {\\Huge \\scshape Candidate Name} \\\\ \\vspace{1pt}
+      \\small Phone Number $|$ Location $|$ \\href{mailto:email@address.com}{email@address.com} $|$ \\href{https://linkedin.com/in/username}{linkedin.com/in/username}
+  \\end{center}
+  
+  % Sections should include: Summary, Skills, Experience, Education.
+  % Make sure experience bullet points use:
+  % \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
+  %   \\resumeItem{accomplishment bullet point}
+  % \\end{itemize}
+  
 - Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}, \\hfill, \\\\).
 - Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
 
