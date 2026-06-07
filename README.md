@@ -5,6 +5,12 @@ This is a Manifest V3 Chrome Extension that scans a resume PDF loaded inside a C
 2. **Hiring Manager & Recruiter Critique** (providing actionable advice so recruiters do not ignore the resume).
 3. **Complete Tailored LaTeX Code** (pre-formatted, ATS-friendly, single-column Overleaf resume template ready to compile).
 
+## 🎁 100% Free for Everyone
+
+This extension is built to be run entirely for free with no subscriptions, ads, or paywalls:
+*   **No Server Hosting Cost**: The extension runs 100% client-side inside your browser. No personal data is sent to external servers other than directly to the Google Gemini API.
+*   **Free AI Power**: It utilizes a free Gemini API Key that anyone can generate from [Google AI Studio](https://aistudio.google.com/). The free tier is more than sufficient for general personal resume optimization tasks.
+
 ---
 
 ## Folder Structure
