@@ -47,7 +47,7 @@ let activeTabUrl = '';
 let activeTabTitle = '';
 let aiProvider = 'gemini';
 let geminiApiKey = '';
-let geminiModelName = 'gemini-2.5-flash';
+let geminiModelName = 'gemini-2.0-flash';
 let anthropicApiKey = '';
 let anthropicModelName = 'claude-3-5-sonnet-20241022';
 let isPdfDetected = false;
@@ -149,7 +149,7 @@ function setupEventListeners() {
   saveSettingsBtn.addEventListener('click', async () => {
     const provider = providerSelect.value;
     const geminiKey = apiKeyInput.value.trim();
-    const geminiModel = modelInput.value.trim() || 'gemini-2.5-flash';
+    const geminiModel = modelInput.value.trim() || 'gemini-2.0-flash';
     const anthropicKey = anthropicKeyInput.value.trim();
     const anthropicModel = anthropicModelInput.value.trim() || 'claude-3-5-sonnet-20241022';
     
@@ -425,10 +425,15 @@ Your job is to analyze a candidate's resume against a target job description and
 CRITICAL INSTRUCTIONS FOR LATEX:
 - Use clean, standard packages: article, latexsym, fullpage, titlesec, marvosym, color, verbatim, enumitem, hyperref, fancyhdr, babel, tabularx.
 - Do NOT use fonts that are not in the standard TeX Live package list. Standard fonts like computer modern (default) are fine.
-- Structure headers clearly. Use simple bullet points with custom small margins using enumitem.
-- Do not use multi-column tables for experience or education; they are bad for ATS. Instead, use headers or custom single-column descriptions.
-- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped.
-- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}).
+- Structure sections and headers clearly.
+- Each professional experience entry MUST use bullet points (\\begin{itemize} ... \\end{itemize}) for candidate accomplishments.
+- For all experience and education bullet lists, use compact margins via enumitem parameters, for example: \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
+- Align company name/location and job title/dates on separate lines using \\hfill, for example:
+  \\noindent \\textbf{Company Name} \\hfill \\textbf{Location} \\\\
+  \\noindent \\textit{Job Title} \\hfill \\textit{Month Year -- Month Year}
+- Do not use tables (tabular/tabularx) for experience sections because tables can confuse ATS parsers. Rely on simple text blocks and \\hfill.
+- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped (e.g. use \\& for ampersands).
+- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}, \\hfill, \\\\).
 - Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
 
 Return the response in JSON format matching this schema:
@@ -600,10 +605,15 @@ Your job is to analyze a candidate's resume against a target job description and
 CRITICAL INSTRUCTIONS FOR LATEX:
 - Use clean, standard packages: article, latexsym, fullpage, titlesec, marvosym, color, verbatim, enumitem, hyperref, fancyhdr, babel, tabularx.
 - Do NOT use fonts that are not in the standard TeX Live package list. Standard fonts like computer modern (default) are fine.
-- Structure headers clearly. Use simple bullet points with custom small margins using enumitem.
-- Do not use multi-column tables for experience or education; they are bad for ATS. Instead, use headers or custom single-column descriptions.
-- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped.
-- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}).
+- Structure sections and headers clearly.
+- Each professional experience entry MUST use bullet points (\\begin{itemize} ... \\end{itemize}) for candidate accomplishments.
+- For all experience and education bullet lists, use compact margins via enumitem parameters, for example: \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
+- Align company name/location and job title/dates on separate lines using \\hfill, for example:
+  \\noindent \\textbf{Company Name} \\hfill \\textbf{Location} \\\\
+  \\noindent \\textit{Job Title} \\hfill \\textit{Month Year -- Month Year}
+- Do not use tables (tabular/tabularx) for experience sections because tables can confuse ATS parsers. Rely on simple text blocks and \\hfill.
+- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped (e.g. use \\& for ampersands).
+- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}, \\hfill, \\\\).
 - Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
 
 Return the response in JSON format matching this schema:
