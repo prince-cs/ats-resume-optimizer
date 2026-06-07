@@ -57,13 +57,48 @@ let analysisResults = null;
 // Initialize Extension Sidepanel
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Load API Settings
-  const data = await chrome.storage.local.get([
+  let data = await chrome.storage.local.get([
     'aiProvider',
     'geminiApiKey',
     'geminiModelName',
     'anthropicApiKey',
     'anthropicModelName'
   ]);
+
+  // Try loading default settings from a local .env file (if created by developer and gitignored)
+  try {
+    const envResponse = await fetch(chrome.runtime.getURL('.env'));
+    if (envResponse.ok) {
+      const envText = await envResponse.text();
+      const envLines = envText.split('\n');
+      const envVars = {};
+      for (const line of envLines) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const equalIdx = trimmed.indexOf('=');
+        if (equalIdx > 0) {
+          const key = trimmed.substring(0, equalIdx).trim();
+          let val = trimmed.substring(equalIdx + 1).trim();
+          // Remove wrapping quotes if present
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.substring(1, val.length - 1);
+          }
+          envVars[key] = val;
+        }
+      }
+      
+      data = {
+        aiProvider: data.aiProvider || envVars.AI_PROVIDER || 'gemini',
+        geminiApiKey: data.geminiApiKey || envVars.GEMINI_API_KEY || '',
+        geminiModelName: data.geminiModelName || envVars.GEMINI_MODEL_NAME || 'gemini-2.0-flash',
+        anthropicApiKey: data.anthropicApiKey || envVars.ANTHROPIC_API_KEY || '',
+        anthropicModelName: data.anthropicModelName || envVars.ANTHROPIC_MODEL_NAME || 'claude-3-5-sonnet-20241022'
+      };
+    }
+  } catch (err) {
+    // .env may not exist, which is fine
+    console.log('No local .env default found or failed to load:', err);
+  }
 
   if (data.aiProvider) {
     aiProvider = data.aiProvider;
