@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATS Resume Optimizer & Overleaf Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">✨</div>
+        <h1>Resume Optimizer</h1>
+      </div>
+      <button id="settings-toggle" class="icon-button" title="Gemini API Settings">⚙️</button>
+    </header>
+
+    <!-- API Key Settings Modal/Section -->
+    <section id="settings-panel" class="settings-panel hidden">
+      <h3>Gemini API Configuration</h3>
+      <p class="settings-info">Enter your Gemini API key to power the analysis. Get a free key from <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a>.</p>
+      <div class="input-group">
+        <div class="password-input-wrapper">
+          <input type="password" id="api-key-input" placeholder="Enter Gemini API Key..." />
+          <button id="toggle-password-visibility" class="text-button">Show</button>
+        </div>
+        <button id="save-settings-btn" class="primary-btn">Save Key</button>
+      </div>
+      <div id="settings-status" class="status-msg"></div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="app-body">
+      <!-- File Status Card -->
+      <section class="card status-card">
+        <div class="card-header">
+          <span class="card-icon">📄</span>
+          <h2>Resume Source</h2>
+        </div>
+        <div class="card-body">
+          <div id="pdf-status-container" class="status-indicator warning">
+            <span class="dot"></span>
+            <span id="pdf-status-text">Checking active tab for PDF...</span>
+          </div>
+          <p id="pdf-details" class="details-text">Please open a Resume PDF in the current Chrome tab.</p>
+        </div>
+      </section>
+
+      <!-- Job Description Card -->
+      <section class="card input-card">
+        <div class="card-header">
+          <span class="card-icon">💼</span>
+          <h2>Target Job Description</h2>
+        </div>
+        <div class="card-body">
+          <textarea id="job-description" placeholder="Paste the job description or requirements here..."></textarea>
+          <button id="analyze-btn" class="action-btn" disabled>Analyze & Generate Template</button>
+        </div>
+      </section>
+
+      <!-- Progress Indicators (Hidden by default) -->
+      <section id="progress-card" class="card progress-card hidden">
+        <div class="card-body">
+          <h3>Optimizing Resume...</h3>
+          <div class="progress-steps">
+            <div id="step-pdf" class="step">
+              <div class="step-indicator">1</div>
+              <div class="step-label">Extracting Resume PDF</div>
+            </div>
+            <div id="step-ai" class="step">
+              <div class="step-indicator">2</div>
+              <div class="step-label">Comparing with Job Description</div>
+            </div>
+            <div id="step-latex" class="step">
+              <div class="step-indicator">3</div>
+              <div class="step-label">Generating Overleaf LaTeX</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Area (Hidden by default) -->
+      <section id="results-card" class="card results-card hidden">
+        <div class="results-header">
+          <h2>Analysis Results</h2>
+          <div class="score-badge">
+            <span class="score-label">ATS Match Score</span>
+            <span id="ats-score" class="score-val">0%</span>
+          </div>
+        </div>
+
+        <div class="tabs-nav">
+          <button class="tab-btn active" data-tab="ats-tab">ATS Feedback</button>
+          <button class="tab-btn" data-tab="recruiter-tab">Recruiter Critique</button>
+          <button class="tab-btn" data-tab="latex-tab">LaTeX Template</button>
+        </div>
+
+        <div class="tabs-content">
+          <!-- Tab 1: ATS Feedback -->
+          <div id="ats-tab" class="tab-panel active">
+            <div class="feedback-group">
+              <h3>Missing Keywords</h3>
+              <ul id="missing-keywords" class="keyword-tags"></ul>
+            </div>
+            <div class="feedback-group">
+              <h3>ATS Tailoring Suggestions</h3>
+              <ul id="ats-suggestions" class="bullet-list"></ul>
+            </div>
+          </div>
+
+          <!-- Tab 2: Recruiter Critique -->
+          <div id="recruiter-tab" class="tab-panel">
+            <div class="feedback-group">
+              <h3>Why Recruiters Might Ignore</h3>
+              <ul id="recruiter-negatives" class="bullet-list warning-list"></ul>
+            </div>
+            <div class="feedback-group">
+              <h3>Hiring Manager Standouts</h3>
+              <ul id="recruiter-positives" class="bullet-list success-list"></ul>
+            </div>
+          </div>
+
+          <!-- Tab 3: LaTeX Template -->
+          <div id="latex-tab" class="tab-panel">
+            <div class="filename-container">
+              <span class="filename-label">Suggested PDF Filename:</span>
+              <div class="filename-box-wrapper">
+                <code id="suggested-filename">candidate_designation.pdf</code>
+                <button id="copy-filename-btn" class="icon-btn-small" title="Copy Filename">📋</button>
+              </div>
+              <p class="filename-tip">💡 Rename your Overleaf project to this name so that downloading the compiled PDF matches this exact name.</p>
+            </div>
+
+            <div class="latex-container">
+              <div class="latex-header">
+                <span>Overleaf LaTeX Code</span>
+                <button id="copy-latex-btn" class="copy-btn">Copy Template Code</button>
+              </div>
+              <pre><code id="latex-code">Generating code...</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- PDF.js script files -->
+  <script src="lib/pdf.min.js"></script>
+  <script src="sidepanel.js"></script>
+</body>
+</html>

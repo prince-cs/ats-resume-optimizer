@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "ATS Resume Optimizer & Overleaf Generator",
+  "version": "1.0",
+  "description": "Scans a resume PDF, analyzes it against a job description, and generates Overleaf LaTeX code.",
+  "permissions": [
+    "activeTab",
+    "sidePanel",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Open Resume Optimizer"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
