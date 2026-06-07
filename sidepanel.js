@@ -399,6 +399,9 @@ Analyze this resume against the job description and output the complete JSON obj
   });
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error("Rate limit exceeded (429). Google AI Studio's free tier has a requests-per-minute limit. Please wait 15-30 seconds and try again.");
+    }
     const errText = await response.text();
     throw new Error(`Gemini API Error (${response.status}): ${errText}`);
   }
