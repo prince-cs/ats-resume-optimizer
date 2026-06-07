@@ -95,6 +95,14 @@ function setupEventListeners() {
       setSettingsStatus('API Key cannot be empty.', 'error');
       return;
     }
+    
+    // Model name validation (prevent accidental copy-pastes of JDs or text that ruin the endpoint URL)
+    const modelRegex = /^[a-zA-Z0-9\-\.\_]+$/;
+    if (!modelRegex.test(model) || model.length > 100) {
+      setSettingsStatus('Invalid Model Name. Spaces/special characters are not allowed.', 'error');
+      return;
+    }
+
     await chrome.storage.local.set({ geminiApiKey: key, geminiModelName: model });
     geminiApiKey = key;
     geminiModelName = model;
