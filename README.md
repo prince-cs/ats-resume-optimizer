@@ -45,28 +45,12 @@ If you intend to analyze local PDF resumes (i.e. `file:///` links):
 3. Scroll down and toggle **Allow access to file URLs** to **ON**.
    *(If this is not enabled, the extension will fail to read local PDF files due to security restrictions).*
 
-### Step 3: Configure AI API Keys (UI)
+### Step 3: Configure Gemini API Key
 1. Click the puzzle icon in Chrome's toolbar and pin **ATS Resume Optimizer**.
 2. Click the extension icon to open the Side Panel.
 3. Click the gear icon (`⚙️`) in the header of the side panel to open the settings.
-4. Select your preferred **AI Provider** (Google Gemini or Anthropic Claude).
-5. Paste your API key and set the model name.
-6. Click **Save Settings**.
-
-### Step 4: Pre-populate API Keys (Optional)
-To avoid entering your API keys every time you reload or reinstall the extension, you can create a local configuration file. This file is gitignored and will never be pushed to version control:
-1. In the root of the extension folder, create a file named `config.json`.
-2. Add your provider and keys matching this template:
-   ```json
-   {
-     "aiProvider": "gemini",
-     "geminiApiKey": "YOUR_GEMINI_API_KEY",
-     "geminiModelName": "gemini-2.0-flash",
-     "anthropicApiKey": "YOUR_ANTHROPIC_API_KEY",
-     "anthropicModelName": "claude-3-5-sonnet-20241022"
-   }
-   ```
-3. Reload the extension in Chrome. The keys and settings will be pre-populated automatically!
+4. Paste your Gemini API key. If you do not have one, get a free key from [Google AI Studio](https://aistudio.google.com/).
+5. Click **Save Key**.
 
 ---
 
