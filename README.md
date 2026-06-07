@@ -60,7 +60,7 @@ To avoid entering your API keys every time you reload or reinstall the extension
    ```env
    AI_PROVIDER=gemini
    GEMINI_API_KEY=YOUR_GEMINI_API_KEY
-   GEMINI_MODEL_NAME=gemini-2.0-flash
+   GEMINI_MODEL_NAME=gemini-2.5-flash
    ANTHROPIC_API_KEY=YOUR_ANTHROPIC_API_KEY
    ANTHROPIC_MODEL_NAME=claude-3-5-sonnet-20241022
    ```

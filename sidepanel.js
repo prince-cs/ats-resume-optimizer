@@ -47,7 +47,7 @@ let activeTabUrl = '';
 let activeTabTitle = '';
 let aiProvider = 'gemini';
 let geminiApiKey = '';
-let geminiModelName = 'gemini-2.0-flash';
+let geminiModelName = 'gemini-2.5-flash';
 let anthropicApiKey = '';
 let anthropicModelName = 'claude-3-5-sonnet-20241022';
 let isPdfDetected = false;
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       data = {
         aiProvider: data.aiProvider || envVars.AI_PROVIDER || 'gemini',
         geminiApiKey: data.geminiApiKey || envVars.GEMINI_API_KEY || '',
-        geminiModelName: data.geminiModelName || envVars.GEMINI_MODEL_NAME || 'gemini-2.0-flash',
+        geminiModelName: data.geminiModelName || envVars.GEMINI_MODEL_NAME || 'gemini-2.5-flash',
         anthropicApiKey: data.anthropicApiKey || envVars.ANTHROPIC_API_KEY || '',
         anthropicModelName: data.anthropicModelName || envVars.ANTHROPIC_MODEL_NAME || 'claude-3-5-sonnet-20241022'
       };
@@ -184,7 +184,7 @@ function setupEventListeners() {
   saveSettingsBtn.addEventListener('click', async () => {
     const provider = providerSelect.value;
     const geminiKey = apiKeyInput.value.trim();
-    const geminiModel = modelInput.value.trim() || 'gemini-2.0-flash';
+    const geminiModel = modelInput.value.trim() || 'gemini-2.5-flash';
     const anthropicKey = anthropicKeyInput.value.trim();
     const anthropicModel = anthropicModelInput.value.trim() || 'claude-3-5-sonnet-20241022';
     
