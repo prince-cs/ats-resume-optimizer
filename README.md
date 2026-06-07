@@ -1,9 +1,8 @@
-# ATS Resume Optimizer & Overleaf Generator (Chrome Extension)
+# ATS Resume Optimizer (Chrome Extension)
 
-This is a Manifest V3 Chrome Extension that scans a resume PDF loaded inside a Chrome tab, analyzes it against a target Job Description using the Google Gemini API, and outputs:
+This is a Manifest V3 Chrome Extension that scans a resume PDF loaded inside a Chrome tab, analyzes it against a target Job Description using the Google Gemini API or Anthropic Claude API, and outputs:
 1. **ATS Match Score & Gap Analysis** (identifying missing keywords and suggestions).
 2. **Hiring Manager & Recruiter Critique** (providing actionable advice so recruiters do not ignore the resume).
-3. **Complete Tailored LaTeX Code** (pre-formatted, ATS-friendly, single-column Overleaf resume template ready to compile).
 
 ## 🎁 100% Free for Everyone
 
@@ -81,30 +80,18 @@ Open the candidate's current resume PDF inside a Chrome tab. This can be:
 2. Make sure it contains key responsibilities and qualifications.
 
 ### Step 3: Analyze
-1. Click the **Analyze & Generate Template** button.
+1. Click the **Analyze Resume** button.
 2. Watch the progress steps complete:
    *   *Step 1: Extracting Resume PDF*
    *   *Step 2: Comparing with Job Description*
-   *   *Step 3: Generating Overleaf LaTeX*
 
-### Step 4: Review Results & Export to Overleaf
+### Step 4: Review Results
 1. Once completed, review the **ATS Feedback** and **Recruiter Critique** tabs.
-2. Navigate to the **LaTeX Template** tab.
-3. Click the **📋** button next to the **Suggested PDF Filename** to copy it (e.g. `JohnDoe_SeniorSoftwareEngineer.pdf`).
-4. Click **Copy Template Code** to copy the full LaTeX code.
-5. Open [Overleaf](https://www.overleaf.com) in your browser:
-   *   Create a **New Project** -> **Blank Project**.
-   *   Name the project *exactly* what was copied in Step 3 (without the `.pdf` extension, e.g. `JohnDoe_SeniorSoftwareEngineer`).
-   *   Delete all default code in the `main.tex` file.
-   *   Paste the copied LaTeX code into `main.tex`.
-   *   Click **Recompile** in Overleaf.
-   *   Click the **Download PDF** button in Overleaf.
-   *   The downloaded file will be named matching the format: `candidateName_designation.pdf` (e.g. `JohnDoe_SeniorSoftwareEngineer.pdf`).
+2. Under **ATS Feedback**, see the match score, missing keywords, and specific, actionable tailoring suggestions.
+3. Under **Recruiter Critique**, check the highlights of what stand out positively, and what could be potential red flags/negatives that recruiters might ignore.
 
 ---
 
 ## Customizing & Prompt Details
-
-The system prompt is configured to return standard LaTeX markup in JSON. The templates generate modern, clean, single-column structures using the standard `article`, `geometry`, `titlesec`, and `enumitem` packages. 
 
 If you want to modify the instructions, styling, or prompts, check out the `callGeminiApi` function in [sidepanel.js](file:///usr/local/google/home/princedatta/ats-resume/sidepanel.js).

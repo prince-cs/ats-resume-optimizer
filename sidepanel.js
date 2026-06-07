@@ -26,7 +26,6 @@ const analyzeBtn = document.getElementById('analyze-btn');
 const progressCard = document.getElementById('progress-card');
 const stepPdf = document.getElementById('step-pdf');
 const stepAi = document.getElementById('step-ai');
-const stepLatex = document.getElementById('step-latex');
 
 const resultsCard = document.getElementById('results-card');
 const atsScoreBadge = document.getElementById('ats-score');
@@ -34,10 +33,6 @@ const missingKeywordsList = document.getElementById('missing-keywords');
 const atsSuggestionsList = document.getElementById('ats-suggestions');
 const recruiterNegativesList = document.getElementById('recruiter-negatives');
 const recruiterPositivesList = document.getElementById('recruiter-positives');
-const suggestedFilenameCode = document.getElementById('suggested-filename');
-const copyFilenameBtn = document.getElementById('copy-filename-btn');
-const copyLatexBtn = document.getElementById('copy-latex-btn');
-const latexCodeBlock = document.getElementById('latex-code');
 
 const tabButtons = document.querySelectorAll('.tab-btn');
 const tabPanels = document.querySelectorAll('.tab-panel');
@@ -252,37 +247,6 @@ function setupEventListeners() {
       document.getElementById(targetTab).classList.add('active');
     });
   });
-
-  // Copy LaTeX Code
-  copyLatexBtn.addEventListener('click', () => {
-    if (!analysisResults || !analysisResults.latexCode) return;
-    navigator.clipboard.writeText(analysisResults.latexCode)
-      .then(() => {
-        const originalText = copyLatexBtn.textContent;
-        copyLatexBtn.textContent = 'Copied! ✓';
-        copyLatexBtn.style.backgroundColor = 'var(--success-color)';
-        setTimeout(() => {
-          copyLatexBtn.textContent = originalText;
-          copyLatexBtn.style.backgroundColor = 'var(--accent-color)';
-        }, 2000);
-      })
-      .catch(err => console.error('Failed to copy text:', err));
-  });
-
-  // Copy Filename
-  copyFilenameBtn.addEventListener('click', () => {
-    if (!analysisResults) return;
-    const filename = getSuggestedFilename();
-    navigator.clipboard.writeText(filename)
-      .then(() => {
-        const originalText = copyFilenameBtn.textContent;
-        copyFilenameBtn.textContent = '✓';
-        setTimeout(() => {
-          copyFilenameBtn.textContent = '📋';
-        }, 1500);
-      })
-      .catch(err => console.error('Failed to copy filename:', err));
-  });
 }
 
 // Set Status Message in Settings
@@ -369,9 +333,7 @@ async function runResumeOptimization() {
     updateStepState('step-ai', 'completed');
 
     // Step 3: Render and display results
-    updateStepState('step-latex', 'active');
     renderResults(analysisResults);
-    updateStepState('step-latex', 'completed');
 
     // Hide progress, display results card
     setTimeout(() => {
@@ -388,7 +350,7 @@ async function runResumeOptimization() {
 
 // Helper to reset step styling
 function resetProgressSteps() {
-  const steps = [stepPdf, stepAi, stepLatex];
+  const steps = [stepPdf, stepAi];
   steps.forEach(step => {
     step.className = 'step';
   });
@@ -450,84 +412,13 @@ async function extractTextFromPdf(pdfUrl) {
 async function callGeminiApi(resumeText, jobDescription) {
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`;
 
-  const systemInstruction = `You are a world-class senior tech recruiter, hiring manager, and LaTeX typesetting expert.
-Your job is to analyze a candidate's resume against a target job description and tailor the resume so that:
-1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
-2. It uses strong, action-oriented impact phrases that immediately hook senior recruiters and hiring managers.
-3. It includes crucial missing keywords and skills identified from the job description.
-4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without packages that require non-standard fonts.
-
-CRITICAL INSTRUCTIONS FOR LATEX:
-- You MUST use the following specific LaTeX document structure and layout template. Do not change command names or section styles:
-  
-  \\documentclass[letterpaper,11pt]{article}
-  \\usepackage{latexsym}
-  \\usepackage[empty]{fullpage}
-  \\usepackage{titlesec}
-  \\usepackage{marvosym}
-  \\usepackage[usenames,dvipsnames]{color}
-  \\usepackage{verbatim}
-  \\usepackage{enumitem}
-  \\usepackage[hidelinks]{hyperref}
-  \\usepackage{fancyhdr}
-  \\usepackage[english]{babel}
-  \\usepackage{tabularx}
-  \\input{glyphtounicode}
-  
-  \\pagestyle{fancy}
-  \\fancyhf{} % clear all header and footer fields
-  \\renewcommand{\\headrulewidth}{0pt}
-  \\renewcommand{\\footrulewidth}{0pt}
-  
-  % Adjust margins
-  \\addtolength{\\oddsidemargin}{-0.5in}
-  \\addtolength{\\evensidemargin}{-0.5in}
-  \\addtolength{\\textwidth}{1.0in}
-  \\addtolength{\\topmargin}{-.5in}
-  \\addtolength{\\textheight}{1.0in}
-  
-  \\urlstyle{same}
-  \\raggedbottom
-  \\raggedright
-  
-  % Sections formatting
-  \\titleformat{\\section}{
-    \\vspace{-4pt}\\scshape\\raggedright\\large\\bfseries
-  }{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]
-  
-  \\pdfgentounicode=1
-  
-  % Custom commands
-  \\newcommand{\\resumeItem}[1]{
-    \\item\\small{
-      {#1 \\vspace{-2pt}}
-    }
-  }
-  
-  \\newcommand{\\resumeSubheading}[4]{
-    \\vspace{-2pt}\\item
-      \\begin{tabular*}{0.97\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
-        \\textbf{#1} & #2 \\\\
-        \\textit{#3} & \\textit{#4} \\\\
-      \\end{tabular*}\\vspace{-7pt}
-  }
-  
-  \\begin{document}
-  
-  % Center-aligned header with name and contact details
-  \\begin{center}
-      {\\Huge \\scshape Candidate Name} \\\\ \\vspace{1pt}
-      \\small Phone Number $|$ Location $|$ \\href{mailto:email@address.com}{email@address.com} $|$ \\href{https://linkedin.com/in/username}{linkedin.com/in/username}
-  \\end{center}
-  
-  % Sections should include: Summary, Skills, Experience, Education.
-  % Make sure experience bullet points use:
-  % \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
-  %   \\resumeItem{accomplishment bullet point}
-  % \\end{itemize}
-  
-- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}, \\hfill, \\\\).
-- Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
+  const systemInstruction = `You are a world-class senior tech recruiter and hiring manager.
+Your job is to analyze a candidate's resume against a target job description and provide structured feedback on ATS fit and recruiter feedback:
+1. ATS Match Score: A percentage rating of how well the candidate's skills and experience match the job description.
+2. Missing Keywords: Crucial missing keywords and skills identified from the job description that should be in the resume.
+3. ATS Suggestions: Specific, actionable bullet-point tailoring suggestions for the resume's experience section to improve ATS matching.
+4. Recruiter Critique Negatives: Clear explanations of what might cause a recruiter/hiring manager to reject the resume or pass on the candidate.
+5. Recruiter Critique Positives: Clear explanations of candidate standouts that match the job requirements well.
 
 Return the response in JSON format matching this schema:
 {
@@ -535,10 +426,7 @@ Return the response in JSON format matching this schema:
   "missingKeywords": ["keyword1", "keyword2", ...],
   "atsSuggestions": ["suggestion1", "suggestion2", ...],
   "recruiterNegatives": ["point1", "point2", ...],
-  "recruiterPositives": ["point1", "point2", ...],
-  "candidateName": "Extracted Candidate's Full Name (e.g. John Doe)",
-  "targetDesignation": "Target Role/Designation from Job Description (e.g. Senior Software Engineer)",
-  "latexCode": "Full compiled LaTeX code, with all backslashes escaped for JSON format. Do not wrap this in markdown blocks, just the raw string."
+  "recruiterPositives": ["point1", "point2", ...]
 }`;
 
   const promptText = `
@@ -548,7 +436,7 @@ ${jobDescription}
 CANDIDATE CURRENT RESUME TEXT:
 ${resumeText}
 
-Analyze this resume against the job description and output the complete JSON object containing recommendations and the fully tailored LaTeX resume code.`;
+Analyze this resume against the job description and output the complete JSON object containing recommendations.`;
 
   const requestBody = {
     contents: [
@@ -595,22 +483,6 @@ Analyze this resume against the job description and output the complete JSON obj
     console.error('Failed to parse Gemini response:', jsonResponse, err);
     throw new Error('Gemini API returned an invalid JSON response. Please try again.');
   }
-}
-
-// Generate the suggested file name based on API results
-function getSuggestedFilename() {
-  if (!analysisResults) return 'resume.pdf';
-  
-  const cleanName = (analysisResults.candidateName || 'Candidate')
-    .trim()
-    .replace(/[^a-zA-Z0-9]/g, '');
-    
-  const cleanDesignation = (analysisResults.targetDesignation || 'Role')
-    .trim()
-    .replace(/\s+/g, '_')
-    .replace(/[^a-zA-Z0-9_]/g, '');
-
-  return `${cleanName}_${cleanDesignation}.pdf`;
 }
 
 // Render the results into the HTML UI
@@ -665,12 +537,6 @@ function renderResults(results) {
   } else {
     recruiterPositivesList.innerHTML = '<li>No standouts highlighted.</li>';
   }
-
-  // Filename suggestion
-  suggestedFilenameCode.textContent = getSuggestedFilename();
-
-  // LaTeX code
-  latexCodeBlock.textContent = results.latexCode || '% No LaTeX code generated.';
 }
 
 // Show/hide settings groups based on selected provider
@@ -688,84 +554,13 @@ function updateSettingsGroupVisibility() {
 async function callAnthropicApi(resumeText, jobDescription) {
   const apiUrl = 'https://api.anthropic.com/v1/messages';
 
-  const systemInstruction = `You are a world-class senior tech recruiter, hiring manager, and LaTeX typesetting expert.
-Your job is to analyze a candidate's resume against a target job description and tailor the resume so that:
-1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
-2. It uses strong, action-oriented impact phrases that immediately hook senior recruiters and hiring managers.
-3. It includes crucial missing keywords and skills identified from the job description.
-4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without packages that require non-standard fonts.
-
-CRITICAL INSTRUCTIONS FOR LATEX:
-- You MUST use the following specific LaTeX document structure and layout template. Do not change command names or section styles:
-  
-  \\documentclass[letterpaper,11pt]{article}
-  \\usepackage{latexsym}
-  \\usepackage[empty]{fullpage}
-  \\usepackage{titlesec}
-  \\usepackage{marvosym}
-  \\usepackage[usenames,dvipsnames]{color}
-  \\usepackage{verbatim}
-  \\usepackage{enumitem}
-  \\usepackage[hidelinks]{hyperref}
-  \\usepackage{fancyhdr}
-  \\usepackage[english]{babel}
-  \\usepackage{tabularx}
-  \\input{glyphtounicode}
-  
-  \\pagestyle{fancy}
-  \\fancyhf{} % clear all header and footer fields
-  \\renewcommand{\\headrulewidth}{0pt}
-  \\renewcommand{\\footrulewidth}{0pt}
-  
-  % Adjust margins
-  \\addtolength{\\oddsidemargin}{-0.5in}
-  \\addtolength{\\evensidemargin}{-0.5in}
-  \\addtolength{\\textwidth}{1.0in}
-  \\addtolength{\\topmargin}{-.5in}
-  \\addtolength{\\textheight}{1.0in}
-  
-  \\urlstyle{same}
-  \\raggedbottom
-  \\raggedright
-  
-  % Sections formatting
-  \\titleformat{\\section}{
-    \\vspace{-4pt}\\scshape\\raggedright\\large\\bfseries
-  }{}{0em}{}[\\color{black}\\titlerule \\vspace{-5pt}]
-  
-  \\pdfgentounicode=1
-  
-  % Custom commands
-  \\newcommand{\\resumeItem}[1]{
-    \\item\\small{
-      {#1 \\vspace{-2pt}}
-    }
-  }
-  
-  \\newcommand{\\resumeSubheading}[4]{
-    \\vspace{-2pt}\\item
-      \\begin{tabular*}{0.97\\textwidth}[t]{l@{\\extracolsep{\\fill}}r}
-        \\textbf{#1} & #2 \\\\
-        \\textit{#3} & \\textit{#4} \\\\
-      \\end{tabular*}\\vspace{-7pt}
-  }
-  
-  \\begin{document}
-  
-  % Center-aligned header with name and contact details
-  \\begin{center}
-      {\\Huge \\scshape Candidate Name} \\\\ \\vspace{1pt}
-      \\small Phone Number $|$ Location $|$ \\href{mailto:email@address.com}{email@address.com} $|$ \\href{https://linkedin.com/in/username}{linkedin.com/in/username}
-  \\end{center}
-  
-  % Sections should include: Summary, Skills, Experience, Education.
-  % Make sure experience bullet points use:
-  % \\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt,parsep=2pt]
-  %   \\resumeItem{accomplishment bullet point}
-  % \\end{itemize}
-  
-- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}, \\hfill, \\\\).
-- Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
+  const systemInstruction = `You are a world-class senior tech recruiter and hiring manager.
+Your job is to analyze a candidate's resume against a target job description and provide structured feedback on ATS fit and recruiter feedback:
+1. ATS Match Score: A percentage rating of how well the candidate's skills and experience match the job description.
+2. Missing Keywords: Crucial missing keywords and skills identified from the job description that should be in the resume.
+3. ATS Suggestions: Specific, actionable bullet-point tailoring suggestions for the resume's experience section to improve ATS matching.
+4. Recruiter Critique Negatives: Clear explanations of what might cause a recruiter/hiring manager to reject the resume or pass on the candidate.
+5. Recruiter Critique Positives: Clear explanations of candidate standouts that match the job requirements well.
 
 Return the response in JSON format matching this schema:
 {
@@ -773,10 +568,7 @@ Return the response in JSON format matching this schema:
   "missingKeywords": ["keyword1", "keyword2", ...],
   "atsSuggestions": ["suggestion1", "suggestion2", ...],
   "recruiterNegatives": ["point1", "point2", ...],
-  "recruiterPositives": ["point1", "point2", ...],
-  "candidateName": "Extracted Candidate's Full Name (e.g. John Doe)",
-  "targetDesignation": "Target Role/Designation from Job Description (e.g. Senior Software Engineer)",
-  "latexCode": "Full compiled LaTeX code, with all backslashes escaped for JSON format. Do not wrap this in markdown blocks, just the raw string."
+  "recruiterPositives": ["point1", "point2", ...]
 }
 
 CRITICAL: Your entire response must be a single raw JSON object matching the above schema. Do NOT wrap it in markdown code blocks like \`\`\`json. Do NOT include any additional conversational text, preambles, or explanations.`;
@@ -788,7 +580,7 @@ ${jobDescription}
 CANDIDATE CURRENT RESUME TEXT:
 ${resumeText}
 
-Analyze this resume against the job description and output the complete JSON object containing recommendations and the fully tailored LaTeX resume code.`;
+Analyze this resume against the job description and output the complete JSON object containing recommendations.`;
 
   const requestBody = {
     model: anthropicModelName,
