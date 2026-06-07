@@ -4,9 +4,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
 // DOM Elements
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
+const providerSelect = document.getElementById('provider-select');
+const geminiSettingsGroup = document.getElementById('gemini-settings-group');
 const apiKeyInput = document.getElementById('api-key-input');
 const togglePasswordVisibility = document.getElementById('toggle-password-visibility');
 const modelInput = document.getElementById('model-input');
+const anthropicSettingsGroup = document.getElementById('anthropic-settings-group');
+const anthropicKeyInput = document.getElementById('anthropic-key-input');
+const toggleAnthropicVisibility = document.getElementById('toggle-anthropic-visibility');
+const anthropicModelInput = document.getElementById('anthropic-model-input');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
 const settingsStatus = document.getElementById('settings-status');
 
@@ -39,8 +45,11 @@ const tabPanels = document.querySelectorAll('.tab-panel');
 // App State
 let activeTabUrl = '';
 let activeTabTitle = '';
+let aiProvider = 'gemini';
 let geminiApiKey = '';
 let geminiModelName = 'gemini-2.0-flash';
+let anthropicApiKey = '';
+let anthropicModelName = 'claude-3-5-sonnet-20241022';
 let isPdfDetected = false;
 let extractedResumeText = '';
 let analysisResults = null;
@@ -48,17 +57,48 @@ let analysisResults = null;
 // Initialize Extension Sidepanel
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Load API Settings
-  const data = await chrome.storage.local.get(['geminiApiKey', 'geminiModelName']);
+  const data = await chrome.storage.local.get([
+    'aiProvider',
+    'geminiApiKey',
+    'geminiModelName',
+    'anthropicApiKey',
+    'anthropicModelName'
+  ]);
+
+  if (data.aiProvider) {
+    aiProvider = data.aiProvider;
+    providerSelect.value = aiProvider;
+  }
+
+  // Load Gemini
   if (data.geminiApiKey) {
     geminiApiKey = data.geminiApiKey;
     apiKeyInput.value = geminiApiKey;
-    if (data.geminiModelName) {
-      geminiModelName = data.geminiModelName;
-      modelInput.value = geminiModelName;
-    }
+  }
+  if (data.geminiModelName) {
+    geminiModelName = data.geminiModelName;
+    modelInput.value = geminiModelName;
+  }
+
+  // Load Anthropic
+  if (data.anthropicApiKey) {
+    anthropicApiKey = data.anthropicApiKey;
+    anthropicKeyInput.value = anthropicApiKey;
+  }
+  if (data.anthropicModelName) {
+    anthropicModelName = data.anthropicModelName;
+    anthropicModelInput.value = anthropicModelName;
+  }
+
+  // Update visibility of settings
+  updateSettingsGroupVisibility();
+
+  // Settings Status
+  const activeKey = aiProvider === 'gemini' ? geminiApiKey : anthropicApiKey;
+  if (activeKey) {
     setSettingsStatus('API Settings loaded.', 'success');
   } else {
-    setSettingsStatus('Please set your Gemini API Key.', 'error');
+    setSettingsStatus(`Please set your API Key for ${aiProvider === 'gemini' ? 'Gemini' : 'Claude'}.`, 'error');
     settingsPanel.classList.remove('hidden');
   }
 
@@ -87,25 +127,62 @@ function setupEventListeners() {
     }
   });
 
+  // AI Provider Toggle
+  providerSelect.addEventListener('change', () => {
+    aiProvider = providerSelect.value;
+    updateSettingsGroupVisibility();
+    validateAnalyzeButton();
+  });
+
+  // Toggle Anthropic API Key Visibility
+  toggleAnthropicVisibility.addEventListener('click', () => {
+    if (anthropicKeyInput.type === 'password') {
+      anthropicKeyInput.type = 'text';
+      toggleAnthropicVisibility.textContent = 'Hide';
+    } else {
+      anthropicKeyInput.type = 'password';
+      toggleAnthropicVisibility.textContent = 'Show';
+    }
+  });
+
   // Save Settings
   saveSettingsBtn.addEventListener('click', async () => {
-    const key = apiKeyInput.value.trim();
-    const model = modelInput.value.trim() || 'gemini-2.0-flash';
-    if (!key) {
-      setSettingsStatus('API Key cannot be empty.', 'error');
+    const provider = providerSelect.value;
+    const geminiKey = apiKeyInput.value.trim();
+    const geminiModel = modelInput.value.trim() || 'gemini-2.0-flash';
+    const anthropicKey = anthropicKeyInput.value.trim();
+    const anthropicModel = anthropicModelInput.value.trim() || 'claude-3-5-sonnet-20241022';
+    
+    if (provider === 'gemini' && !geminiKey) {
+      setSettingsStatus('Gemini API Key cannot be empty.', 'error');
+      return;
+    }
+    if (provider === 'anthropic' && !anthropicKey) {
+      setSettingsStatus('Anthropic API Key cannot be empty.', 'error');
       return;
     }
     
-    // Model name validation (prevent accidental copy-pastes of JDs or text that ruin the endpoint URL)
     const modelRegex = /^[a-zA-Z0-9\-\.\_]+$/;
-    if (!modelRegex.test(model) || model.length > 100) {
+    const modelToValidate = provider === 'gemini' ? geminiModel : anthropicModel;
+    if (!modelRegex.test(modelToValidate) || modelToValidate.length > 100) {
       setSettingsStatus('Invalid Model Name. Spaces/special characters are not allowed.', 'error');
       return;
     }
 
-    await chrome.storage.local.set({ geminiApiKey: key, geminiModelName: model });
-    geminiApiKey = key;
-    geminiModelName = model;
+    await chrome.storage.local.set({
+      aiProvider: provider,
+      geminiApiKey: geminiKey,
+      geminiModelName: geminiModel,
+      anthropicApiKey: anthropicKey,
+      anthropicModelName: anthropicModel
+    });
+
+    aiProvider = provider;
+    geminiApiKey = geminiKey;
+    geminiModelName = geminiModel;
+    anthropicApiKey = anthropicKey;
+    anthropicModelName = anthropicModel;
+
     setSettingsStatus('API Settings saved successfully!', 'success');
     setTimeout(() => {
       settingsPanel.classList.add('hidden');
@@ -182,7 +259,7 @@ function setSettingsStatus(msg, type) {
 // Validate whether all fields are filled to run the analysis
 function validateAnalyzeButton() {
   const isJdFilled = jobDescriptionTextarea.value.trim().length > 10;
-  const hasApiKey = geminiApiKey.length > 0;
+  const hasApiKey = aiProvider === 'gemini' ? geminiApiKey.length > 0 : anthropicApiKey.length > 0;
   
   analyzeBtn.disabled = !(isPdfDetected && isJdFilled && hasApiKey);
 }
@@ -246,10 +323,14 @@ async function runResumeOptimization() {
     extractedResumeText = await extractTextFromPdf(activeTabUrl);
     updateStepState('step-pdf', 'completed');
 
-    // Step 2: Compare with Job Description (Gemini API)
+    // Step 2: Compare with Job Description (AI API)
     updateStepState('step-ai', 'active');
     const jobDescription = jobDescriptionTextarea.value.trim();
-    analysisResults = await callGeminiApi(extractedResumeText, jobDescription);
+    if (aiProvider === 'gemini') {
+      analysisResults = await callGeminiApi(extractedResumeText, jobDescription);
+    } else {
+      analysisResults = await callAnthropicApi(extractedResumeText, jobDescription);
+    }
     updateStepState('step-ai', 'completed');
 
     // Step 3: Render and display results
@@ -492,4 +573,102 @@ function renderResults(results) {
 
   // LaTeX code
   latexCodeBlock.textContent = results.latexCode || '% No LaTeX code generated.';
+}
+
+// Show/hide settings groups based on selected provider
+function updateSettingsGroupVisibility() {
+  if (aiProvider === 'gemini') {
+    geminiSettingsGroup.classList.remove('hidden');
+    anthropicSettingsGroup.classList.add('hidden');
+  } else {
+    geminiSettingsGroup.classList.add('hidden');
+    anthropicSettingsGroup.classList.remove('hidden');
+  }
+}
+
+// Call Anthropic Claude to analyze the resume and generate the Overleaf LaTeX template
+async function callAnthropicApi(resumeText, jobDescription) {
+  const apiUrl = 'https://api.anthropic.com/v1/messages';
+
+  const systemInstruction = `You are a world-class senior tech recruiter, hiring manager, and LaTeX typesetting expert.
+Your job is to analyze a candidate's resume against a target job description and tailor the resume so that:
+1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
+2. It uses strong, action-oriented impact phrases that immediately hook senior recruiters and hiring managers.
+3. It includes crucial missing keywords and skills identified from the job description.
+4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without packages that require non-standard fonts.
+
+CRITICAL INSTRUCTIONS FOR LATEX:
+- Use clean, standard packages: article, latexsym, fullpage, titlesec, marvosym, color, verbatim, enumitem, hyperref, fancyhdr, babel, tabularx.
+- Do NOT use fonts that are not in the standard TeX Live package list. Standard fonts like computer modern (default) are fine.
+- Structure headers clearly. Use simple bullet points with custom small margins using enumitem.
+- Do not use multi-column tables for experience or education; they are bad for ATS. Instead, use headers or custom single-column descriptions.
+- Ensure all LaTeX special characters like %, &, $, _, #, { } are correctly escaped.
+- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\documentclass, \\begin{document}).
+- Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
+
+Return the response in JSON format matching this schema:
+{
+  "atsMatchScore": <number between 0 and 100>,
+  "missingKeywords": ["keyword1", "keyword2", ...],
+  "atsSuggestions": ["suggestion1", "suggestion2", ...],
+  "recruiterNegatives": ["point1", "point2", ...],
+  "recruiterPositives": ["point1", "point2", ...],
+  "candidateName": "Extracted Candidate's Full Name (e.g. John Doe)",
+  "targetDesignation": "Target Role/Designation from Job Description (e.g. Senior Software Engineer)",
+  "latexCode": "Full compiled LaTeX code, with all backslashes escaped for JSON format. Do not wrap this in markdown blocks, just the raw string."
+}
+
+CRITICAL: Your entire response must be a single raw JSON object matching the above schema. Do NOT wrap it in markdown code blocks like \`\`\`json. Do NOT include any additional conversational text, preambles, or explanations.`;
+
+  const promptText = `
+JOB DESCRIPTION:
+${jobDescription}
+
+CANDIDATE CURRENT RESUME TEXT:
+${resumeText}
+
+Analyze this resume against the job description and output the complete JSON object containing recommendations and the fully tailored LaTeX resume code.`;
+
+  const requestBody = {
+    model: anthropicModelName,
+    max_tokens: 4096,
+    system: systemInstruction,
+    messages: [
+      {
+        role: "user",
+        content: promptText
+      }
+    ]
+  };
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'x-api-key': anthropicApiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error("Rate limit exceeded (429) on Anthropic API. Please wait a moment and try again.");
+    }
+    const errText = await response.text();
+    throw new Error(`Anthropic API Error (${response.status}): ${errText}`);
+  }
+
+  const jsonResponse = await response.json();
+  
+  try {
+    const rawResult = jsonResponse.content[0].text.trim();
+    // In case the model accidentally wrapped it in code blocks:
+    const cleanJsonText = rawResult.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    const parsed = JSON.parse(cleanJsonText);
+    return parsed;
+  } catch (err) {
+    console.error('Failed to parse Anthropic response:', jsonResponse, err);
+    throw new Error('Anthropic API returned an invalid JSON response. Please try again.');
+  }
 }

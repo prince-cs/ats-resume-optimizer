@@ -22,22 +22,52 @@
 
     <!-- API Key Settings Modal/Section -->
     <section id="settings-panel" class="settings-panel hidden">
-      <h3>Gemini API Configuration</h3>
-      <p class="settings-info">🎁 <strong>100% Free to Use:</strong> This extension runs entirely in your browser. To power the AI analysis, obtain a free API key with no usage charges from <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a>.</p>
+      <h3>AI API Configuration</h3>
+      <p class="settings-info">🎁 <strong>100% Free Option:</strong> Google Gemini has a free tier. Select a provider below, obtain your API key, and configure the model name.</p>
       <div class="input-group">
         <div class="field-container">
-          <label for="api-key-input" class="field-label">Gemini API Key</label>
-          <div class="password-input-wrapper">
-            <input type="password" id="api-key-input" placeholder="Enter Gemini API Key..." />
-            <button id="toggle-password-visibility" class="text-button">Show</button>
+          <label for="provider-select" class="field-label">AI Provider</label>
+          <select id="provider-select" class="select-input">
+            <option value="gemini">Google Gemini</option>
+            <option value="anthropic">Anthropic Claude</option>
+          </select>
+        </div>
+
+        <!-- Gemini Fields -->
+        <div id="gemini-settings-group" class="settings-group">
+          <div class="field-container">
+            <label for="api-key-input" class="field-label">Gemini API Key</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="api-key-input" placeholder="Enter Gemini API Key..." />
+              <button id="toggle-password-visibility" class="text-button">Show</button>
+            </div>
+            <span class="field-help">Get a free key from <a href="https://aistudio.google.com/" target="_blank">Google AI Studio</a>.</span>
+          </div>
+          <div class="field-container">
+            <label for="model-input" class="field-label">Model Name</label>
+            <div class="model-input-wrapper">
+              <input type="text" id="model-input" placeholder="Model Name (e.g. gemini-2.0-flash)" value="gemini-2.0-flash" title="Gemini Model Name" />
+            </div>
           </div>
         </div>
-        <div class="field-container">
-          <label for="model-input" class="field-label">Model Name</label>
-          <div class="model-input-wrapper">
-            <input type="text" id="model-input" placeholder="Model Name (e.g. gemini-2.0-flash)" value="gemini-2.0-flash" title="Gemini Model Name" />
+
+        <!-- Anthropic Fields -->
+        <div id="anthropic-settings-group" class="settings-group hidden">
+          <div class="field-container">
+            <label for="anthropic-key-input" class="field-label">Anthropic API Key</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="anthropic-key-input" placeholder="Enter Anthropic API Key..." />
+              <button id="toggle-anthropic-visibility" class="text-button">Show</button>
+            </div>
+          </div>
+          <div class="field-container">
+            <label for="anthropic-model-input" class="field-label">Model Name</label>
+            <div class="model-input-wrapper">
+              <input type="text" id="anthropic-model-input" placeholder="Model Name (e.g. claude-3-5-sonnet-20241022)" value="claude-3-5-sonnet-20241022" title="Anthropic Model Name" />
+            </div>
           </div>
         </div>
+
         <button id="save-settings-btn" class="primary-btn">Save Settings</button>
       </div>
       <div id="settings-status" class="status-msg"></div>
