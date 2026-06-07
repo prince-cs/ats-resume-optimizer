@@ -57,13 +57,31 @@ let analysisResults = null;
 // Initialize Extension Sidepanel
 document.addEventListener('DOMContentLoaded', async () => {
   // 1. Load API Settings
-  const data = await chrome.storage.local.get([
+  let data = await chrome.storage.local.get([
     'aiProvider',
     'geminiApiKey',
     'geminiModelName',
     'anthropicApiKey',
     'anthropicModelName'
   ]);
+
+  // Try loading default settings from a local config.json file (if created by developer and gitignored)
+  try {
+    const configResponse = await fetch(chrome.runtime.getURL('config.json'));
+    if (configResponse.ok) {
+      const config = await configResponse.json();
+      data = {
+        aiProvider: data.aiProvider || config.aiProvider || 'gemini',
+        geminiApiKey: data.geminiApiKey || config.geminiApiKey || '',
+        geminiModelName: data.geminiModelName || config.geminiModelName || 'gemini-2.0-flash',
+        anthropicApiKey: data.anthropicApiKey || config.anthropicApiKey || '',
+        anthropicModelName: data.anthropicModelName || config.anthropicModelName || 'claude-3-5-sonnet-20241022'
+      };
+    }
+  } catch (err) {
+    // config.json may not exist, which is fine
+    console.log('No local config.json default found or failed to load:', err);
+  }
 
   if (data.aiProvider) {
     aiProvider = data.aiProvider;
