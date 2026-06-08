@@ -456,16 +456,119 @@ Your job is to analyze a candidate's resume against a target job description and
 1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
 2. It uses strong, action-oriented impact phrases that immediately hook senior recruiters and hiring managers.
 3. It includes crucial missing keywords and skills identified from the job description.
-4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) using the specific custom resume class style.
+4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without needing any secondary external class files.
 
 CRITICAL INSTRUCTIONS FOR LATEX:
-- You MUST use the following specific LaTeX document structure and layout template. Do not change command names or section styles:
+- You MUST use the following specific inline LaTeX document structure and layout template. It embeds the custom resume styles directly so the user can copy/paste it into a single main.tex file in Overleaf. Do not change command names, macro names, or section styles:
 
-  \\documentclass{resume} % Use the custom resume.cls style
+  \\documentclass[11pt,letterpaper]{article} % Font size and paper type
 
   \\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry} % Document margins
+  \\usepackage[parfill]{parskip} % Remove paragraph indentation
+  \\usepackage{array} % Required for boldface tabular columns
+  \\usepackage{ifthen} % Required for ifthenelse statements
+
+  \\usepackage{hyperref}
+  \\hypersetup{
+      colorlinks=true,
+      linkcolor=blue,
+      filecolor=magenta,      
+      urlcolor=blue,
+  }
+
+  \\pagestyle{empty} % Suppress page numbers
+
+  %----------------------------------------------------------------------------------------
+  %	HEADINGS COMMANDS & CLASS DEFINITIONS INLINED
+  %----------------------------------------------------------------------------------------
+  \\makeatletter
+
+  \\def \\name#1{\\def\\@name{#1}} % Defines the \\name command to set name
+  \\def \\@name {} % Sets \\@name to empty by default
+
+  \\def \\addressSep {$\\diamond$} % Set default address separator to a diamond
+
+  % One, two or three address lines can be specified 
+  \\let \\@addressone \\relax
+  \\let \\@addresstwo \\relax
+  \\let \\@addressthree \\relax
+
+  % \\address command can be used to set the first, second, and third address (last 2 optional)
+  \\def \\address #1{
+    \\@ifundefined{@addresstwo}{
+      \\def \\@addresstwo {#1}
+    }{
+    \\@ifundefined{@addressthree}{
+    \\def \\@addressthree {#1}
+    }{
+       \\def \\@addressone {#1}
+    }}
+  }
+
+  % \\printaddress is used to style an address line (given as input)
+  \\def \\printaddress #1{
+    \\begingroup
+      \\def \\\\ {\\addressSep\\ }
+      \\centerline{#1}
+    \\endgroup
+    \\par
+    \\addressskip
+  }
+
+  % \\printname is used to print the name as a page header
+  \\def \\printname {
+    \\begingroup
+      \\hfil{\\MakeUppercase{\\namesize\\bf \\@name}}\\hfil
+      \\nameskip\\break
+    \\endgroup
+  }
+
+  %----------------------------------------------------------------------------------------
+  %	PRINT THE HEADING LINES
+  %----------------------------------------------------------------------------------------
+
+  \\let\\ori@document=\\document
+  \\renewcommand{\\document}{
+    \\ori@document  % Begin document
+    \\printname % Print the name specified with \\name
+    \\@ifundefined{@addressone}{}{ % Print the first address if specified
+      \\printaddress{\\@addressone}}
+    \\@ifundefined{@addresstwo}{}{ % Print the second address if specified
+      \\printaddress{\\@addresstwo}}
+    \\@ifundefined{@addressthree}{}{ % Print the third address if specified
+      \\printaddress{\\@addressthree}}
+  }
+
+  %----------------------------------------------------------------------------------------
+  %	SECTION FORMATTING
+  %----------------------------------------------------------------------------------------
+
+  % Defines the rSection environment for the large sections within the CV
+  \\newenvironment{rSection}[1]{ % 1 input argument - section name
+    \\sectionskip
+    \\MakeUppercase{{\\bf #1}} % Section title
+    \\sectionlineskip
+    \\hrule % Horizontal line
+    \\begin{list}{}{ % List for each individual item in the section
+      \\setlength{\\leftmargin}{0em} % Margin within the section
+    }
+    \\item[]
+  }{
+    \\end{list}
+  }
+
+  % The below commands define the whitespace after certain things in the document
+  \\def\\namesize{\\LARGE} % Size of the name at the top of the document
+  \\def\\addressskip{\\smallskip} % The space between the two address (or phone/email) lines
+  \\def\\sectionlineskip{\\medskip} % The space above the horizontal line for each section 
+  \\def\\nameskip{\\medskip} % The space after your name at the top
+  \\def\\sectionskip{\\medskip} % The space after the heading section
+
+  \\makeatother
+
   \\newcommand{\\tab}[1]{\\hspace{.2667\\textwidth}\\rlap{#1}} 
   \\newcommand{\\itab}[1]{\\hspace{0em}\\rlap{#1}}
+
   \\name{Candidate Name} % Your name
   % You can merge both of these into a single line, if you do not have a website.
   \\address{Phone Number \\\\ Location} 
@@ -702,16 +805,119 @@ Your job is to analyze a candidate's resume against a target job description and
 1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
 2. It uses strong, action-oriented impact phrases that immediately hook senior recruiters and hiring managers.
 3. It includes crucial missing keywords and skills identified from the job description.
-4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) using the specific custom resume class style.
+4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without needing any secondary external class files.
 
 CRITICAL INSTRUCTIONS FOR LATEX:
-- You MUST use the following specific LaTeX document structure and layout template. Do not change command names or section styles:
+- You MUST use the following specific inline LaTeX document structure and layout template. It embeds the custom resume styles directly so the user can copy/paste it into a single main.tex file in Overleaf. Do not change command names, macro names, or section styles:
 
-  \\documentclass{resume} % Use the custom resume.cls style
+  \\documentclass[11pt,letterpaper]{article} % Font size and paper type
 
   \\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry} % Document margins
+  \\usepackage[parfill]{parskip} % Remove paragraph indentation
+  \\usepackage{array} % Required for boldface tabular columns
+  \\usepackage{ifthen} % Required for ifthenelse statements
+
+  \\usepackage{hyperref}
+  \\hypersetup{
+      colorlinks=true,
+      linkcolor=blue,
+      filecolor=magenta,      
+      urlcolor=blue,
+  }
+
+  \\pagestyle{empty} % Suppress page numbers
+
+  %----------------------------------------------------------------------------------------
+  %	HEADINGS COMMANDS & CLASS DEFINITIONS INLINED
+  %----------------------------------------------------------------------------------------
+  \\makeatletter
+
+  \\def \\name#1{\\def\\@name{#1}} % Defines the \\name command to set name
+  \\def \\@name {} % Sets \\@name to empty by default
+
+  \\def \\addressSep {$\\diamond$} % Set default address separator to a diamond
+
+  % One, two or three address lines can be specified 
+  \\let \\@addressone \\relax
+  \\let \\@addresstwo \\relax
+  \\let \\@addressthree \\relax
+
+  % \\address command can be used to set the first, second, and third address (last 2 optional)
+  \\def \\address #1{
+    \\@ifundefined{@addresstwo}{
+      \\def \\@addresstwo {#1}
+    }{
+    \\@ifundefined{@addressthree}{
+    \\def \\@addressthree {#1}
+    }{
+       \\def \\@addressone {#1}
+    }}
+  }
+
+  % \\printaddress is used to style an address line (given as input)
+  \\def \\printaddress #1{
+    \\begingroup
+      \\def \\\\ {\\addressSep\\ }
+      \\centerline{#1}
+    \\endgroup
+    \\par
+    \\addressskip
+  }
+
+  % \\printname is used to print the name as a page header
+  \\def \\printname {
+    \\begingroup
+      \\hfil{\\MakeUppercase{\\namesize\\bf \\@name}}\\hfil
+      \\nameskip\\break
+    \\endgroup
+  }
+
+  %----------------------------------------------------------------------------------------
+  %	PRINT THE HEADING LINES
+  %----------------------------------------------------------------------------------------
+
+  \\let\\ori@document=\\document
+  \\renewcommand{\\document}{
+    \\ori@document  % Begin document
+    \\printname % Print the name specified with \\name
+    \\@ifundefined{@addressone}{}{ % Print the first address if specified
+      \\printaddress{\\@addressone}}
+    \\@ifundefined{@addresstwo}{}{ % Print the second address if specified
+      \\printaddress{\\@addresstwo}}
+    \\@ifundefined{@addressthree}{}{ % Print the third address if specified
+      \\printaddress{\\@addressthree}}
+  }
+
+  %----------------------------------------------------------------------------------------
+  %	SECTION FORMATTING
+  %----------------------------------------------------------------------------------------
+
+  % Defines the rSection environment for the large sections within the CV
+  \\newenvironment{rSection}[1]{ % 1 input argument - section name
+    \\sectionskip
+    \\MakeUppercase{{\\bf #1}} % Section title
+    \\sectionlineskip
+    \\hrule % Horizontal line
+    \\begin{list}{}{ % List for each individual item in the section
+      \\setlength{\\leftmargin}{0em} % Margin within the section
+    }
+    \\item[]
+  }{
+    \\end{list}
+  }
+
+  % The below commands define the whitespace after certain things in the document
+  \\def\\namesize{\\LARGE} % Size of the name at the top of the document
+  \\def\\addressskip{\\smallskip} % The space between the two address (or phone/email) lines
+  \\def\\sectionlineskip{\\medskip} % The space above the horizontal line for each section 
+  \\def\\nameskip{\\medskip} % The space after your name at the top
+  \\def\\sectionskip{\\medskip} % The space after the heading section
+
+  \\makeatother
+
   \\newcommand{\\tab}[1]{\\hspace{.2667\\textwidth}\\rlap{#1}} 
   \\newcommand{\\itab}[1]{\\hspace{0em}\\rlap{#1}}
+
   \\name{Candidate Name} % Your name
   % You can merge both of these into a single line, if you do not have a website.
   \\address{Phone Number \\\\ Location} 
