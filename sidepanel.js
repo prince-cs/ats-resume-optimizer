@@ -681,32 +681,76 @@ Analyze this resume against the job description and output the complete JSON obj
     }
   };
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!response.ok) {
-    if (response.status === 429) {
-      throw new Error("Rate limit exceeded (429). Google AI Studio's free tier has a requests-per-minute limit. Please wait 15-30 seconds and try again.");
+  const modelsToTry = [geminiModelName];
+  const allFallbacks = [
+    'gemini-2.5-flash',
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-pro'
+  ];
+  for (const m of allFallbacks) {
+    if (m !== geminiModelName) {
+      modelsToTry.push(m);
     }
-    const errText = await response.text();
-    throw new Error(`Gemini API Error (${response.status}): ${errText}`);
   }
 
-  const jsonResponse = await response.json();
-  
-  try {
-    const rawResult = jsonResponse.candidates[0].content.parts[0].text;
-    const parsed = JSON.parse(rawResult);
-    return parsed;
-  } catch (err) {
-    console.error('Failed to parse Gemini response:', jsonResponse, err);
-    throw new Error('Gemini API returned an invalid JSON response. Please try again.');
+  let lastError = null;
+
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const currentModel = modelsToTry[i];
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${geminiApiKey}`;
+    console.log(`Attempting Gemini analysis with model: ${currentModel}...`);
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        const status = response.status;
+
+        // If it's a 5xx server error, and we have fallback models left, try next model
+        if (status >= 500 && status < 600 && i < modelsToTry.length - 1) {
+          console.warn(`Model ${currentModel} returned ${status}. Falling back to ${modelsToTry[i + 1]}...`);
+          continue;
+        }
+
+        if (status === 429) {
+          throw new Error("Rate limit exceeded (429). Google AI Studio's free tier has a requests-per-minute limit. Please wait 15-30 seconds and try again.");
+        }
+        throw new Error(`Gemini API Error (${status}): ${errText}`);
+      }
+
+      const jsonResponse = await response.json();
+
+      try {
+        const rawResult = jsonResponse.candidates[0].content.parts[0].text;
+        const parsed = JSON.parse(rawResult);
+        return parsed;
+      } catch (err) {
+        console.error(`Failed to parse response from model ${currentModel}:`, jsonResponse, err);
+        if (i < modelsToTry.length - 1) {
+          console.warn(`Model ${currentModel} returned invalid JSON. Falling back to ${modelsToTry[i + 1]}...`);
+          continue;
+        }
+        throw new Error('Gemini API returned an invalid JSON response. Please try again.');
+      }
+
+    } catch (err) {
+      lastError = err;
+      if (i === modelsToTry.length - 1) {
+        throw err;
+      }
+      console.warn(`Error with model ${currentModel}: ${err.message}. Trying next fallback model...`);
+    }
   }
+
+  throw lastError;
 }
 
 // Render the results into the HTML UI
