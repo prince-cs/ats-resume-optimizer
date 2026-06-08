@@ -1,13 +1,14 @@
-# ATS Resume Optimizer (Chrome Extension)
+# ATS Resume Optimizer & Overleaf Generator
 
 This is a Manifest V3 Chrome Extension that scans a resume PDF loaded inside a Chrome tab, analyzes it against a target Job Description using the Google Gemini API or Anthropic Claude API, and outputs:
-1. **ATS Match Score & Gap Analysis** (identifying missing keywords and suggestions).
-2. **Hiring Manager & Recruiter Critique** (providing actionable advice so recruiters do not ignore the resume).
+1. **ATS Match Score & Gap Analysis**: Identifies missing keywords and provides tailoring suggestions.
+2. **Hiring Manager & Recruiter Critique**: Highlights standouts and flags red flags that might cause recruiters to ignore the resume.
+3. **Tailored LaTeX Resume Template**: Generates a clean, professional, single-column Overleaf-compatible LaTeX document with the suggestions and keywords already fully integrated.
 
 ## 🎁 100% Free for Everyone
 
 This extension is built to be run entirely for free with no subscriptions, ads, or paywalls:
-*   **No Server Hosting Cost**: The extension runs 100% client-side inside your browser. No personal data is sent to external servers other than directly to the Google Gemini API.
+*   **No Server Hosting Cost**: The extension runs 100% client-side inside your browser. No personal data is sent to external servers other than directly to the Google Gemini or Anthropic Claude APIs.
 *   **Free AI Power**: It utilizes a free Gemini API Key that anyone can generate from [Google AI Studio](https://aistudio.google.com/). The free tier is more than sufficient for general personal resume optimization tasks.
 
 ---
@@ -19,7 +20,7 @@ The project contains the following files:
 *   `background.js`: Extension Service Worker that configures the action click to open the side panel.
 *   `sidepanel.html`: The HTML structure for the UI panel.
 *   `sidepanel.css`: Modern premium dark-mode styling for the interface.
-*   `sidepanel.js`: Orchestrates PDF fetching, parsing via PDF.js, and communicating with the Gemini API.
+*   `sidepanel.js`: Orchestrates PDF fetching, parsing via PDF.js, and communicating with the Gemini and Anthropic APIs.
 *   `lib/`:
     *   `pdf.min.js`: Mozilla's PDF.js library for PDF content extraction.
     *   `pdf.worker.min.js`: Worker thread file for PDF.js processing.
@@ -80,18 +81,28 @@ Open the candidate's current resume PDF inside a Chrome tab. This can be:
 2. Make sure it contains key responsibilities and qualifications.
 
 ### Step 3: Analyze
-1. Click the **Analyze Resume** button.
+1. Click the **Analyze & Generate Template** button.
 2. Watch the progress steps complete:
    *   *Step 1: Extracting Resume PDF*
    *   *Step 2: Comparing with Job Description*
+   *   *Step 3: Generating Overleaf LaTeX*
 
-### Step 4: Review Results
-1. Once completed, review the **ATS Feedback** and **Recruiter Critique** tabs.
-2. Under **ATS Feedback**, see the match score, missing keywords, and specific, actionable tailoring suggestions.
-3. Under **Recruiter Critique**, check the highlights of what stand out positively, and what could be potential red flags/negatives that recruiters might ignore.
+### Step 4: Review Results & Build Resume
+1. Once completed, review the tabs:
+   *   **ATS Feedback**: Shows your Match Score, Missing Keywords, and Specific Tailoring Suggestions to optimize your content.
+   *   **Recruiter Critique**: Highlights what stands out positively to hiring managers and flags potential issues that recruiters might dislike.
+   *   **LaTeX Template**: Contains the fully compiled LaTeX code for your new optimized resume.
+2. Under the **LaTeX Template** tab:
+   *   Copy the **Suggested PDF Filename** (e.g., `JohnDoe_Senior_Software_Engineer.pdf`) using the copy button (📋).
+   *   Copy the **Overleaf LaTeX Code** using the `Copy Template Code` button.
+3. Open [Overleaf](https://www.overleaf.com/) and log in.
+4. Create a new project: **New Project** -> **Blank Project**.
+5. Give your project the name you copied in Step 2 (Suggested PDF Filename).
+6. Delete everything inside the default `main.tex` and paste the copied LaTeX code.
+7. Click **Recompile**. Your professionally typeset, ATS-optimized, single-column resume is ready! When you download the PDF, it will automatically have the correct search-friendly filename.
 
 ---
 
 ## Customizing & Prompt Details
 
-If you want to modify the instructions, styling, or prompts, check out the `callGeminiApi` function in [sidepanel.js](file:///usr/local/google/home/princedatta/ats-resume/sidepanel.js).
+If you want to modify the instructions, styling, or prompts, check out the `callGeminiApi` and `callAnthropicApi` functions in [sidepanel.js](file:///usr/local/google/home/princedatta/ats-resume/sidepanel.js).
