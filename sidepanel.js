@@ -640,6 +640,7 @@ CRITICAL INSTRUCTIONS FOR LATEX:
 - Under the EXPERIENCE section, make sure the role name uses \\\\textbf{Role Name} and the dates use \\\\hfill, the company name is on the next line followed by \\\\hfill \\\\textit{Location}, and the bullet points are nested in an itemize block with \\\\itemsep -3pt {} and no other custom styling.
 - Under the PROJECTS section, use \\\\item \\\\textbf{Project Title.} {Project description...} style.
 - Under the Education section, use {\\\\bf Degree/Major}, University Name \\\\hfill {Expected Year or Year Range} followed by \\\\ Relevant Coursework: Course 1, Course 2...
+- If the candidate does not have any projects, work experience, education, or skills listed in their resume, you MUST completely omit that corresponding section from the LaTeX code. Do NOT output empty sections, placeholder sections, or placeholder messages (e.g., do NOT generate a PROJECTS section that says 'No projects listed on resume').
 
 Return the response in JSON format matching this schema:
 {
@@ -1038,6 +1039,7 @@ CRITICAL INSTRUCTIONS FOR LATEX:
 - Under the EXPERIENCE section, make sure the role name uses \\\\textbf{Role Name} and the dates use \\\\hfill, the company name is on the next line followed by \\\\hfill \\\\textit{Location}, and the bullet points are nested in an itemize block with \\\\itemsep -3pt {} and no other custom styling.
 - Under the PROJECTS section, use \\\\item \\\\textbf{Project Title.} {Project description...} style.
 - Under the Education section, use {\\\\bf Degree/Major}, University Name \\\\hfill {Expected Year or Year Range} followed by \\\\ Relevant Coursework: Course 1, Course 2...
+- If the candidate does not have any projects, work experience, education, or skills listed in their resume, you MUST completely omit that corresponding section from the LaTeX code. Do NOT output empty sections, placeholder sections, or placeholder messages (e.g., do NOT generate a PROJECTS section that says 'No projects listed on resume').
 
 Return the response in JSON format matching this schema:
 {
