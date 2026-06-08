@@ -683,9 +683,12 @@ Analyze this resume against the job description and output the complete JSON obj
 
   const modelsToTry = [geminiModelName];
   const allFallbacks = [
+    'gemini-3.5-flash',
+    'gemini-3.1-lite',
     'gemini-2.5-flash',
-    'gemini-1.5-flash',
+    'gemini-2.0-flash-lite',
     'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-1.5-pro'
   ];
   for (const m of allFallbacks) {
@@ -714,15 +717,17 @@ Analyze this resume against the job description and output the complete JSON obj
         const errText = await response.text();
         const status = response.status;
 
-        // If it's a 5xx server error, and we have fallback models left, try next model
-        if (status >= 500 && status < 600 && i < modelsToTry.length - 1) {
-          console.warn(`Model ${currentModel} returned ${status}. Falling back to ${modelsToTry[i + 1]}...`);
-          continue;
-        }
-
+        // If it's a 429 rate limit, throw immediately so the user knows they need to wait
         if (status === 429) {
           throw new Error("Rate limit exceeded (429). Google AI Studio's free tier has a requests-per-minute limit. Please wait 15-30 seconds and try again.");
         }
+
+        // For any other error (5xx, 404 model not found, etc.), if we have fallback models left, try next model
+        if (i < modelsToTry.length - 1) {
+          console.warn(`Model ${currentModel} failed with status ${status}. Falling back to ${modelsToTry[i + 1]}...`);
+          continue;
+        }
+
         throw new Error(`Gemini API Error (${status}): ${errText}`);
       }
 
