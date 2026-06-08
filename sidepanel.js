@@ -488,7 +488,7 @@ CRITICAL INSTRUCTIONS FOR LATEX:
   %----------------------------------------------------------------------------------------
   \\begin{rSection}{SKILLS}
 
-  \\begin{tabular}{ @{} >{\\bfseries}l @{\\hspace{6ex}} l }
+  \\begin{tabular}{ @{} >{\\bfseries}l @{\\hspace{6ex}} p{5.0in} }
   Technical Skills & A, B, C, D
   \\\\
   Soft Skills & A, B, C, D\\\\
@@ -734,7 +734,7 @@ CRITICAL INSTRUCTIONS FOR LATEX:
   %----------------------------------------------------------------------------------------
   \\begin{rSection}{SKILLS}
 
-  \\begin{tabular}{ @{} >{\\bfseries}l @{\\hspace{6ex}} l }
+  \\begin{tabular}{ @{} >{\\bfseries}l @{\\hspace{6ex}} p{5.0in} }
   Technical Skills & A, B, C, D
   \\\\
   Soft Skills & A, B, C, D\\\\
