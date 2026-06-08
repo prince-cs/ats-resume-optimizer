@@ -99,7 +99,7 @@
         </div>
         <div class="card-body">
           <textarea id="job-description" placeholder="Paste the job description or requirements here..."></textarea>
-          <button id="analyze-btn" class="action-btn" disabled>Analyze Resume</button>
+          <button id="analyze-btn" class="action-btn" disabled>Analyze & Generate Template</button>
         </div>
       </section>
 
@@ -115,6 +115,10 @@
             <div id="step-ai" class="step">
               <div class="step-indicator">2</div>
               <div class="step-label">Comparing with Job Description</div>
+            </div>
+            <div id="step-latex" class="step">
+              <div class="step-indicator">3</div>
+              <div class="step-label">Generating Overleaf LaTeX</div>
             </div>
           </div>
         </div>
@@ -133,6 +137,7 @@
         <div class="tabs-nav">
           <button class="tab-btn active" data-tab="ats-tab">ATS Feedback</button>
           <button class="tab-btn" data-tab="recruiter-tab">Recruiter Critique</button>
+          <button class="tab-btn" data-tab="latex-tab">LaTeX Template</button>
         </div>
 
         <div class="tabs-content">
@@ -157,6 +162,26 @@
             <div class="feedback-group">
               <h3>Hiring Manager Standouts</h3>
               <ul id="recruiter-positives" class="bullet-list success-list"></ul>
+            </div>
+          </div>
+
+          <!-- Tab 3: LaTeX Template -->
+          <div id="latex-tab" class="tab-panel">
+            <div class="filename-container">
+              <span class="filename-label">Suggested PDF Filename:</span>
+              <div class="filename-box-wrapper">
+                <code id="suggested-filename">candidate_designation.pdf</code>
+                <button id="copy-filename-btn" class="icon-btn-small" title="Copy Filename">📋</button>
+              </div>
+              <p class="filename-tip">💡 Rename your Overleaf project to this name so that downloading the compiled PDF matches this exact name.</p>
+            </div>
+
+            <div class="latex-container">
+              <div class="latex-header">
+                <span>Overleaf LaTeX Code</span>
+                <button id="copy-latex-btn" class="copy-btn">Copy Template Code</button>
+              </div>
+              <pre><code id="latex-code">Generating code...</code></pre>
             </div>
           </div>
         </div>
