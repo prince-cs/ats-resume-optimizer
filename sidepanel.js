@@ -29,6 +29,7 @@ const analyzeBtn = document.getElementById('analyze-btn');
 const progressCard = document.getElementById('progress-card');
 const stepPdf = document.getElementById('step-pdf');
 const stepAi = document.getElementById('step-ai');
+const aiSubStatus = document.getElementById('ai-sub-status');
 const stepLatex = document.getElementById('step-latex');
 
 const suggestedFilenameCode = document.getElementById('suggested-filename');
@@ -432,6 +433,7 @@ async function runResumeOptimization() {
         throw new Error(err.message + (apiError ? ` (Prior OpenRouter attempt also failed: ${apiError.message})` : ''));
       }
     }
+    setAiSubStatus('');
     updateStepState('step-ai', 'completed');
 
     // Step 3: Render and display results
@@ -447,6 +449,7 @@ async function runResumeOptimization() {
 
   } catch (error) {
     console.error('Optimization failed:', error);
+    setAiSubStatus('');
     alert('Optimization failed: ' + error.message);
     progressCard.classList.add('hidden');
   }
@@ -458,6 +461,7 @@ function resetProgressSteps() {
   steps.forEach(step => {
     step.className = 'step';
   });
+  setAiSubStatus('');
 }
 
 // Helper to change classes on steps
@@ -469,6 +473,17 @@ function updateStepState(stepId, state) {
   } else if (state === 'completed') {
     step.classList.add('completed');
     step.classList.remove('active');
+  }
+}
+
+// Helper to update active AI model details sub-status
+function setAiSubStatus(text) {
+  if (text) {
+    aiSubStatus.textContent = text;
+    aiSubStatus.classList.remove('hidden');
+  } else {
+    aiSubStatus.textContent = '';
+    aiSubStatus.classList.add('hidden');
   }
 }
 
@@ -767,6 +782,7 @@ Analyze this resume against the job description and output the complete JSON obj
     const currentModel = modelsToTry[i];
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:generateContent?key=${geminiApiKey}`;
     console.log(`Attempting Gemini analysis with model: ${currentModel}...`);
+    setAiSubStatus(`Calling Gemini fallback: ${currentModel}...`);
 
     try {
       const response = await fetch(url, {
@@ -1108,6 +1124,7 @@ async function callOpenRouterApi(resumeText, jobDescription) {
     const currentModel = modelsToTry[i];
     try {
       console.log(`Attempting OpenRouter analysis with model: ${currentModel} (${i + 1}/${modelsToTry.length})...`);
+      setAiSubStatus(`Calling ${currentModel} (attempt ${i + 1}/${modelsToTry.length})...`);
       const response = await attemptOpenRouterCall(apiUrl, currentModel, resumeText, jobDescription);
       return response;
     } catch (err) {
@@ -1439,6 +1456,7 @@ Analyze this resume against the job description and output the complete JSON obj
     ]
   };
 
+  setAiSubStatus(`Calling Claude: ${anthropicModelName}...`);
   const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {

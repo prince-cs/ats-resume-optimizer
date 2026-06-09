@@ -431,7 +431,7 @@ body {
 
 .step {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   opacity: 0.5;
   transition: var(--transition);
@@ -481,6 +481,27 @@ body {
 .step.completed .step-label {
   color: var(--text-secondary);
   text-decoration: line-through;
+}
+
+.step-details {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.step-sub-status {
+  font-size: 11px;
+  color: var(--accent-color);
+  margin-top: 2px;
+  font-style: italic;
+  font-weight: 500;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
 }
 
 /* Results Card */
