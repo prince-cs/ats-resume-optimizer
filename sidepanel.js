@@ -688,8 +688,7 @@ Analyze this resume against the job description and output the complete JSON obj
     'gemini-3.1-lite',
     'gemini-2.5-flash',
     'gemini-2.0-flash-lite',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash'
+    'gemini-2.0-flash'
   ];
   for (const m of allFallbacks) {
     if (m !== geminiModelName) {
