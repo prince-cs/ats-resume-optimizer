@@ -13,6 +13,9 @@ const anthropicSettingsGroup = document.getElementById('anthropic-settings-group
 const anthropicKeyInput = document.getElementById('anthropic-key-input');
 const toggleAnthropicVisibility = document.getElementById('toggle-anthropic-visibility');
 const anthropicModelInput = document.getElementById('anthropic-model-input');
+const openrouterKeyInput = document.getElementById('openrouter-key-input');
+const toggleOpenrouterVisibility = document.getElementById('toggle-openrouter-visibility');
+const openrouterModelInput = document.getElementById('openrouter-model-input');
 const saveSettingsBtn = document.getElementById('save-settings-btn');
 const settingsStatus = document.getElementById('settings-status');
 
@@ -47,6 +50,8 @@ const tabPanels = document.querySelectorAll('.tab-panel');
 let activeTabUrl = '';
 let activeTabTitle = '';
 let aiProvider = 'gemini';
+let openrouterApiKey = '';
+let openrouterModelName = 'google/gemini-2.0-flash';
 let geminiApiKey = '';
 let geminiModelName = 'gemini-2.5-flash';
 let anthropicApiKey = '';
@@ -60,6 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 1. Load API Settings
   let data = await chrome.storage.local.get([
     'aiProvider',
+    'openrouterApiKey',
+    'openrouterModelName',
     'geminiApiKey',
     'geminiModelName',
     'anthropicApiKey',
@@ -106,6 +113,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     providerSelect.value = aiProvider;
   }
 
+  // Load OpenRouter
+  if (data.openrouterApiKey) {
+    openrouterApiKey = data.openrouterApiKey;
+    openrouterKeyInput.value = openrouterApiKey;
+  }
+  if (data.openrouterModelName) {
+    openrouterModelName = data.openrouterModelName;
+    openrouterModelInput.value = openrouterModelName;
+  } else {
+    openrouterModelInput.value = openrouterModelName;
+  }
+
   // Load Gemini
   if (data.geminiApiKey) {
     geminiApiKey = data.geminiApiKey;
@@ -130,11 +149,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateSettingsGroupVisibility();
 
   // Settings Status
-  const activeKey = aiProvider === 'gemini' ? geminiApiKey : anthropicApiKey;
+  const activeKey = openrouterApiKey || (aiProvider === 'gemini' ? geminiApiKey : anthropicApiKey);
   if (activeKey) {
     setSettingsStatus('API Settings loaded.', 'success');
   } else {
-    setSettingsStatus(`Please set your API Key for ${aiProvider === 'gemini' ? 'Gemini' : 'Claude'}.`, 'error');
+    setSettingsStatus(`Please set your API Key for OpenRouter, ${aiProvider === 'gemini' ? 'Gemini' : 'Claude'}.`, 'error');
     settingsPanel.classList.remove('hidden');
   }
 
@@ -163,6 +182,17 @@ function setupEventListeners() {
     }
   });
 
+  // Toggle OpenRouter API Key Visibility
+  toggleOpenrouterVisibility.addEventListener('click', () => {
+    if (openrouterKeyInput.type === 'password') {
+      openrouterKeyInput.type = 'text';
+      toggleOpenrouterVisibility.textContent = 'Hide';
+    } else {
+      openrouterKeyInput.type = 'password';
+      toggleOpenrouterVisibility.textContent = 'Show';
+    }
+  });
+
   // AI Provider Toggle
   providerSelect.addEventListener('change', () => {
     aiProvider = providerSelect.value;
@@ -184,29 +214,37 @@ function setupEventListeners() {
   // Save Settings
   saveSettingsBtn.addEventListener('click', async () => {
     const provider = providerSelect.value;
+    const openrouterKey = openrouterKeyInput.value.trim();
+    const openrouterModel = openrouterModelInput.value.trim() || 'google/gemini-2.0-flash';
     const geminiKey = apiKeyInput.value.trim();
     const geminiModel = modelInput.value.trim() || 'gemini-2.5-flash';
     const anthropicKey = anthropicKeyInput.value.trim();
     const anthropicModel = anthropicModelInput.value.trim() || 'claude-3-5-sonnet-20241022';
     
-    if (provider === 'gemini' && !geminiKey) {
-      setSettingsStatus('Gemini API Key cannot be empty.', 'error');
+    if (!openrouterKey && provider === 'gemini' && !geminiKey) {
+      setSettingsStatus('Please set either OpenRouter API Key or Gemini API Key.', 'error');
       return;
     }
-    if (provider === 'anthropic' && !anthropicKey) {
-      setSettingsStatus('Anthropic API Key cannot be empty.', 'error');
+    if (!openrouterKey && provider === 'anthropic' && !anthropicKey) {
+      setSettingsStatus('Please set either OpenRouter API Key or Anthropic API Key.', 'error');
       return;
     }
     
-    const modelRegex = /^[a-zA-Z0-9\-\.\_]+$/;
+    const modelRegex = /^[a-zA-Z0-9\-\.\_\/\:]+$/;
     const modelToValidate = provider === 'gemini' ? geminiModel : anthropicModel;
     if (!modelRegex.test(modelToValidate) || modelToValidate.length > 100) {
-      setSettingsStatus('Invalid Model Name. Spaces/special characters are not allowed.', 'error');
+      setSettingsStatus('Invalid Fallback Model Name. Spaces/special characters are not allowed.', 'error');
+      return;
+    }
+    if (openrouterKey && (!modelRegex.test(openrouterModel) || openrouterModel.length > 100)) {
+      setSettingsStatus('Invalid OpenRouter Model Name.', 'error');
       return;
     }
 
     await chrome.storage.local.set({
       aiProvider: provider,
+      openrouterApiKey: openrouterKey,
+      openrouterModelName: openrouterModel,
       geminiApiKey: geminiKey,
       geminiModelName: geminiModel,
       anthropicApiKey: anthropicKey,
@@ -214,6 +252,8 @@ function setupEventListeners() {
     });
 
     aiProvider = provider;
+    openrouterApiKey = openrouterKey;
+    openrouterModelName = openrouterModel;
     geminiApiKey = geminiKey;
     geminiModelName = geminiModel;
     anthropicApiKey = anthropicKey;
@@ -295,7 +335,7 @@ function setSettingsStatus(msg, type) {
 // Validate whether all fields are filled to run the analysis
 function validateAnalyzeButton() {
   const isJdFilled = jobDescriptionTextarea.value.trim().length > 10;
-  const hasApiKey = aiProvider === 'gemini' ? geminiApiKey.length > 0 : anthropicApiKey.length > 0;
+  const hasApiKey = openrouterApiKey.length > 0 || (aiProvider === 'gemini' ? geminiApiKey.length > 0 : anthropicApiKey.length > 0);
   
   analyzeBtn.disabled = !(isPdfDetected && isJdFilled && hasApiKey);
 }
@@ -362,10 +402,35 @@ async function runResumeOptimization() {
     // Step 2: Compare with Job Description (AI API)
     updateStepState('step-ai', 'active');
     const jobDescription = jobDescriptionTextarea.value.trim();
-    if (aiProvider === 'gemini') {
-      analysisResults = await callGeminiApi(extractedResumeText, jobDescription);
-    } else {
-      analysisResults = await callAnthropicApi(extractedResumeText, jobDescription);
+    
+    let success = false;
+    let apiError = null;
+
+    if (openrouterApiKey) {
+      try {
+        console.log(`Attempting analysis with OpenRouter (${openrouterModelName})...`);
+        analysisResults = await callOpenRouterApi(extractedResumeText, jobDescription);
+        success = true;
+      } catch (err) {
+        console.warn("OpenRouter API call failed. Falling back to Gemini/Anthropic...", err);
+        apiError = err;
+      }
+    }
+
+    if (!success) {
+      try {
+        if (aiProvider === 'gemini') {
+          console.log(`Attempting analysis with Gemini fallback...`);
+          analysisResults = await callGeminiApi(extractedResumeText, jobDescription);
+        } else {
+          console.log(`Attempting analysis with Anthropic fallback...`);
+          analysisResults = await callAnthropicApi(extractedResumeText, jobDescription);
+        }
+        success = true;
+      } catch (err) {
+        console.error("Fallback API call failed as well:", err);
+        throw new Error(err.message + (apiError ? ` (Prior OpenRouter attempt also failed: ${apiError.message})` : ''));
+      }
     }
     updateStepState('step-ai', 'completed');
 
@@ -755,6 +820,270 @@ Analyze this resume against the job description and output the complete JSON obj
   }
 
   throw lastError;
+}
+
+// Call OpenRouter API to analyze the resume and generate the Overleaf LaTeX template
+async function callOpenRouterApi(resumeText, jobDescription) {
+  const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+  const systemInstruction = `You are a world-class senior tech recruiter, hiring manager, and LaTeX typesetting expert.
+Your job is to analyze a candidate's resume against a target job description and tailor the resume so that:
+1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
+2. It uses strong, action-oriented impact phrases that immediately hook senior recruiters and hiring managers.
+3. It includes crucial missing keywords and skills identified from the job description.
+4. It compiles cleanly in Overleaf LaTeX (standard TeX Live environment) without needing any secondary external class files.
+
+CRITICAL INSTRUCTIONS FOR LATEX:
+- You MUST use the following specific inline LaTeX document structure and layout template. It embeds the custom resume styles directly so the user can copy/paste it into a single main.tex file in Overleaf. Do not change command names, macro names, or section styles:
+
+  \\documentclass[11pt,letterpaper]{article} % Font size and paper type
+
+  \\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry} % Document margins
+  \\usepackage[parfill]{parskip} % Remove paragraph indentation
+  \\usepackage{array} % Required for boldface tabular columns
+  \\usepackage{ifthen} % Required for ifthenelse statements
+
+  \\usepackage{hyperref}
+  \\hypersetup{
+      colorlinks=true,
+      linkcolor=blue,
+      filecolor=magenta,      
+      urlcolor=blue,
+  }
+
+  \\pagestyle{empty} % Suppress page numbers
+
+  %----------------------------------------------------------------------------------------
+  %	HEADINGS COMMANDS & CLASS DEFINITIONS INLINED
+  %----------------------------------------------------------------------------------------
+  \\makeatletter
+
+  \\def \\name#1{\\def\\@name{#1}} % Defines the \\name command to set name
+  \\def \\@name {} % Sets \\@name to empty by default
+
+  \\def \\addressSep {$\\diamond$} % Set default address separator to a diamond
+
+  % One, two or three address lines can be specified 
+  \\let \\@addressone \\relax
+  \\let \\@addresstwo \\relax
+  \\let \\@addressthree \\relax
+
+  % \\address command can be used to set the first, second, and third address (last 2 optional)
+  \\def \\address #1{
+    \\@ifundefined{@addresstwo}{
+      \\def \\@addresstwo {#1}
+    }{
+    \\@ifundefined{@addressthree}{
+    \\def \\@addressthree {#1}
+    }{
+       \\def \\@addressone {#1}
+    }}
+  }
+
+  % \\printaddress is used to style an address line (given as input)
+  \\def \\printaddress #1{
+    \\begingroup
+      \\def \\\\ {\\addressSep\\ }
+      \\centerline{#1}
+    \\endgroup
+    \\par
+    \\addressskip
+  }
+
+  % \\printname is used to print the name as a page header
+  \\def \\printname {
+    \\begingroup
+      \\hfil{\\MakeUppercase{\\namesize\\bf \\@name}}\\hfil
+      \\nameskip\\break
+    \\endgroup
+  }
+
+  %----------------------------------------------------------------------------------------
+  %	PRINT THE HEADING LINES
+  %----------------------------------------------------------------------------------------
+
+  \\let\\ori@document=\\document
+  \\renewcommand{\\document}{
+    \\ori@document  % Begin document
+    \\printname % Print the name specified with \\name
+    \\@ifundefined{@addressone}{}{ % Print the first address if specified
+      \\printaddress{\\@addressone}}
+    \\@ifundefined{@addresstwo}{}{ % Print the second address if specified
+      \\printaddress{\\@addresstwo}}
+    \\@ifundefined{@addressthree}{}{ % Print the third address if specified
+      \\printaddress{\\@addressthree}}
+  }
+
+  %----------------------------------------------------------------------------------------
+  %	SECTION FORMATTING
+  %----------------------------------------------------------------------------------------
+
+  % Defines the rSection environment for the large sections within the CV
+  \\newenvironment{rSection}[1]{ % 1 input argument - section name
+    \\sectionskip
+    \\MakeUppercase{{\\bf #1}} % Section title
+    \\sectionlineskip
+    \\hrule % Horizontal line
+    \\begin{list}{}{ % List for each individual item in the section
+      \\setlength{\\leftmargin}{0em} % Margin within the section
+    }
+    \\item[]
+  }{
+    \\end{list}
+  }
+
+  % The below commands define the whitespace after certain things in the document
+  \\def\\namesize{\\LARGE} % Size of the name at the top of the document
+  \\def\\addressskip{\\smallskip} % The space between the two address (or phone/email) lines
+  \\def\\sectionlineskip{\\medskip} % The space above the horizontal line for each section 
+  \\def\\nameskip{\\medskip} % The space after your name at the top
+  \\def\\sectionskip{\\medskip} % The space after the heading section
+
+  \\makeatother
+
+  \\newcommand{\\tab}[1]{\\hspace{.2667\\textwidth}\\rlap{#1}} 
+  \\newcommand{\\itab}[1]{\\hspace{0em}\\rlap{#1}}
+
+  \\name{Candidate Name} % Your name
+  % You can merge both of these into a single line, if you do not have a website.
+  \\address{Phone Number \\\\ Location} 
+  \\address{\\href{mailto:email@address.com}{email@address.com} \\\\ \\href{https://linkedin.com/in/username}{linkedin.com/in/username}}  %
+
+  \\begin{document}
+
+  %----------------------------------------------------------------------------------------
+  %	OBJECTIVE
+  %----------------------------------------------------------------------------------------
+
+  \\begin{rSection}{OBJECTIVE}
+
+  {Software Engineer/tailored role with years of experience, seeking full-time tailored roles.}
+
+  \\end{rSection}
+
+  %----------------------------------------------------------------------------------------
+  % TECHINICAL STRENGTHS	
+  %----------------------------------------------------------------------------------------
+  \\begin{rSection}{SKILLS}
+
+  \\begin{tabular}{ @{} >{\\bfseries}l @{\\hspace{6ex}} p{5.0in} }
+  Technical Skills & A, B, C, D
+  \\\\
+  Soft Skills & A, B, C, D\\\\
+  XYZ & A, B, C, D\\\\
+  \\end{tabular}\\\\
+  \\end{rSection}
+
+  \\begin{rSection}{EXPERIENCE}
+
+  \\textbf{Role Name} \\hfill Jan 2017 - Jan 2019\\\\
+  Company Name \\hfill \\textit{San Francisco, CA}
+   \\begin{itemize}
+      \\itemsep -3pt {} 
+       \\item Achieved X\\% growth for XYZ using A, B, and C skills.
+       \\item Led XYZ which led to X\\% of improvement in ABC
+      \\item Developed XYZ that did A, B, and C using X, Y, and Z. 
+   \\end{itemize}
+
+  \\end{rSection} 
+
+  %----------------------------------------------------------------------------------------
+  %	WORK EXPERIENCE SECTION (PROJECTS)
+  %----------------------------------------------------------------------------------------
+
+  \\begin{rSection}{PROJECTS}
+  \\vspace{-1.25em}
+  \\item \\textbf{Project Title.} {Project description... \\href{URL}{(Link)}}
+  \\end{rSection} 
+
+  %----------------------------------------------------------------------------------------
+  %	EDUCATION SECTION
+  %----------------------------------------------------------------------------------------
+
+  \\begin{rSection}{Education}
+
+  {\\bf Master/Bachelor of Computer Science}, Stanford University \\hfill {Expected 2020}\\\\
+  Relevant Coursework: A, B, C, and D.
+
+  \\end{rSection}
+
+  \\end{document}
+
+- Return the LaTeX code as a string in the JSON output. Remember to escape backslashes as double backslashes in JSON (e.g. \\\\documentclass, \\\\begin{document}, \\\\hfill, \\\\name, \\\\address, \\\\item, \\\\textbf, \\\\%).
+- Make sure the LaTeX code contains the actual tailored content of the resume, incorporating the keywords and suggestions. Do NOT output a placeholder template. It should be a COMPLETE, fully written, ready-to-compile resume.
+- For links, use standard LaTeX hyperref syntax: \\\\href{URL}{text}.
+- Under the EXPERIENCE section, make sure the role name uses \\\\textbf{Role Name} and the dates use \\\\hfill, the company name is on the next line followed by \\\\hfill \\\\textit{Location}, and the bullet points are nested in an itemize block with \\\\itemsep -3pt {} and no other custom styling.
+- Under the PROJECTS section, use \\\\item \\\\textbf{Project Title.} {Project description...} style.
+- Under the Education section, use {\\\\bf Degree/Major}, University Name \\\\hfill {Expected Year or Year Range} followed by \\\\ Relevant Coursework: Course 1, Course 2...
+- If the candidate does not have any projects, work experience, education, or skills listed in their resume, you MUST completely omit that corresponding section from the LaTeX code. Do NOT output empty sections, placeholder sections, or placeholder messages (e.g., do NOT generate a PROJECTS section that says 'No projects listed on resume').
+
+Return the response in JSON format matching this schema:
+{
+  "atsMatchScore": <number between 0 and 100>,
+  "missingKeywords": ["keyword1", "keyword2", ...],
+  "atsSuggestions": ["suggestion1", "suggestion2", ...],
+  "recruiterNegatives": ["point1", "point2", ...],
+  "recruiterPositives": ["point1", "point2", ...],
+  "candidateName": "Extracted Candidate's Full Name (e.g. John Doe)",
+  "targetDesignation": "Target Role/Designation from Job Description (e.g. Senior Software Engineer)",
+  "latexCode": "Full compiled LaTeX code, with all backslashes and quotes escaped for JSON format. Do not wrap this in markdown blocks, just the raw string."
+}`;
+
+  const promptText = `
+JOB DESCRIPTION:
+${jobDescription}
+
+CANDIDATE CURRENT RESUME TEXT:
+${resumeText}
+
+Analyze this resume against the job description and output the complete JSON object containing recommendations and the fully tailored LaTeX resume code.`;
+
+  const requestBody = {
+    model: openrouterModelName,
+    messages: [
+      {
+        role: "system",
+        content: systemInstruction
+      },
+      {
+        role: "user",
+        content: promptText
+      }
+    ],
+    response_format: {
+      type: "json_object"
+    },
+    temperature: 0.2
+  };
+
+  const response = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openrouterApiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://github.com/prince-cs/ats-resume-optimizer',
+      'X-Title': 'ATS Resume Optimizer'
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error("Rate limit exceeded (429) on OpenRouter API. Please wait a moment and try again.");
+    }
+    const errText = await response.text();
+    throw new Error(`OpenRouter API Error (${response.status}): ${errText}`);
+  }
+
+  const jsonResponse = await response.json();
+  try {
+    const rawResult = jsonResponse.choices[0].message.content;
+    const parsed = JSON.parse(rawResult);
+    return parsed;
+  } catch (err) {
+    console.error(`Failed to parse response from OpenRouter:`, jsonResponse, err);
+    throw new Error('OpenRouter API returned an invalid JSON response. Please try again.');
+  }
 }
 
 // Render the results into the HTML UI

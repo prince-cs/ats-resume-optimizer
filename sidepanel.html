@@ -25,8 +25,26 @@
       <h3>AI API Configuration</h3>
       <p class="settings-info">🎁 <strong>100% Free Option:</strong> Google Gemini has a free tier. Select a provider below, obtain your API key, and configure the model name.</p>
       <div class="input-group">
+        <!-- OpenRouter Fields (Priority fallback) -->
         <div class="field-container">
-          <label for="provider-select" class="field-label">AI Provider</label>
+          <label for="openrouter-key-input" class="field-label">OpenRouter API Key (Priority Fallback)</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="openrouter-key-input" placeholder="Enter OpenRouter API Key..." />
+            <button id="toggle-openrouter-visibility" class="text-button">Show</button>
+          </div>
+          <span class="field-help">If provided, this is tried first. Get a key from <a href="https://openrouter.ai/" target="_blank">OpenRouter</a>.</span>
+        </div>
+        <div class="field-container">
+          <label for="openrouter-model-input" class="field-label">OpenRouter Model Name</label>
+          <div class="model-input-wrapper">
+            <input type="text" id="openrouter-model-input" placeholder="Model Name (e.g. google/gemini-2.0-flash)" value="google/gemini-2.0-flash" title="OpenRouter Model Name" />
+          </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;" />
+
+        <div class="field-container">
+          <label for="provider-select" class="field-label">AI Provider (Fallback)</label>
           <select id="provider-select" class="select-input">
             <option value="gemini">Google Gemini</option>
             <option value="anthropic">Anthropic Claude</option>
