@@ -447,7 +447,7 @@ async function extractTextFromPdf(pdfUrl) {
   }
 }
 
-// Call Gemini 1.5 Pro to analyze the resume and generate the Overleaf LaTeX template
+// Call Gemini API to analyze the resume and generate the Overleaf LaTeX template
 async function callGeminiApi(resumeText, jobDescription) {
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${geminiApiKey}`;
 
@@ -689,8 +689,7 @@ Analyze this resume against the job description and output the complete JSON obj
     'gemini-2.5-flash',
     'gemini-2.0-flash-lite',
     'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-1.5-pro'
+    'gemini-1.5-flash'
   ];
   for (const m of allFallbacks) {
     if (m !== geminiModelName) {
