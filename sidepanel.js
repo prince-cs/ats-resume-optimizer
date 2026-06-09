@@ -1,97 +1,11 @@
 // Configure PDF.js Worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
 
-const LATEX_PREAMBLE = `\\documentclass[11pt,letterpaper]{article}
+const LATEX_PREAMBLE = `\\documentclass{resume} % Use the custom resume.cls style
 
-\\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry}
-\\usepackage[parfill]{parskip}
-\\usepackage{array}
-\\usepackage{ifthen}
-
-\\usepackage{hyperref}
-\\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=blue,
-}
-
-\\pagestyle{empty}
-
-\\makeatletter
-
-\\def \\name#1{\\def\\@name{#1}}
-\\def \\@name {}
-
-\\def \\addressSep {$\\diamond$}
-
-\\let \\@addressone \\relax
-\\let \\@addresstwo \\relax
-\\let \\@addressthree \\relax
-
-\\def \\address #1{
-  \\@ifundefined{@addresstwo}{
-    \\def \\@addresstwo {#1}
-  }{
-  \\@ifundefined{@addressthree}{
-  \\def \\@addressthree {#1}
-  }{
-     \\def \\@addressone {#1}
-  }}
-}
-
-\\def \\printaddress #1{
-  \\begingroup
-    \\def \\\\ {\\addressSep\\ }
-    \\centerline{#1}
-  \\endgroup
-  \\par
-  \\addressskip
-}
-
-\\def \\printname {
-  \\begingroup
-    \\hfil{\\MakeUppercase{\\namesize\\bf \\@name}}\\hfil
-    \\nameskip\\break
-  \\endgroup
-}
-
-\\let\\ori@document=\\document
-\\renewcommand{\\document}{
-  \\ori@document
-  \\printname
-  \\@ifundefined{@addressone}{}{
-    \\printaddress{\\@addressone}}
-  \\@ifundefined{@addresstwo}{}{
-    \\printaddress{\\@addresstwo}}
-  \\@ifundefined{@addressthree}{}{
-    \\printaddress{\\@addressthree}}
-}
-
-\\newenvironment{rSection}[1]{
-  \\sectionskip
-  \\MakeUppercase{{\\bf #1}}
-  \\sectionlineskip
-  \\hrule
-  \\begin{list}{}{
-    \\setlength{\\leftmargin}{0em}
-  }
-  \\item[]
-}{
-  \\end{list}
-}
-
-\\def\\namesize{\\LARGE}
-\\def\\addressskip{\\smallskip}
-\\def\\sectionlineskip{\\medskip}
-\\def\\nameskip{\\medskip}
-\\def\\sectionskip{\\medskip}
-
-\\makeatother
-
-\\newcommand{\\tab}[1]{\\hspace{.2667\\textwidth}\\rlap{#1}}
-\\newcommand{\\itab}[1]{\\hspace{0em}\\rlap{#1}}
-`;
+\\usepackage[left=0.4 in,top=0.4in,right=0.4 in,bottom=0.4in]{geometry} % Document margins
+\\newcommand{\\tab}[1]{\\hspace{.2667\\textwidth}\\rlap{#1}} 
+\\newcommand{\\itab}[1]{\\hspace{0em}\\rlap{#1}}`;
 
 // DOM Elements
 const settingsToggle = document.getElementById('settings-toggle');
@@ -389,8 +303,9 @@ function setupEventListeners() {
 
   // Copy LaTeX Code
   copyLatexBtn.addEventListener('click', () => {
-    if (!analysisResults || !analysisResults.latexCode) return;
-    navigator.clipboard.writeText(analysisResults.latexCode)
+    const code = latexCodeBlock.textContent;
+    if (!code || code === '% No LaTeX code generated.') return;
+    navigator.clipboard.writeText(code)
       .then(() => {
         const originalText = copyLatexBtn.textContent;
         copyLatexBtn.textContent = 'Copied! ✓';
@@ -1052,7 +967,11 @@ function renderResults(results) {
   suggestedFilenameCode.textContent = getSuggestedFilename();
 
   // LaTeX code
-  latexCodeBlock.textContent = results.latexCode || '% No LaTeX code generated.';
+  let finalLatex = results.latexCode || '% No LaTeX code generated.';
+  if (results.latexCode && !results.latexCode.includes('\\documentclass')) {
+    finalLatex = LATEX_PREAMBLE + '\n\n' + results.latexCode;
+  }
+  latexCodeBlock.textContent = finalLatex;
 }
 
 // Generate the suggested file name based on API results
