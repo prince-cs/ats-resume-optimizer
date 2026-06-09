@@ -822,10 +822,8 @@ Analyze this resume against the job description and output the complete JSON obj
   throw lastError;
 }
 
-// Call OpenRouter API to analyze the resume and generate the Overleaf LaTeX template
-async function callOpenRouterApi(resumeText, jobDescription) {
-  const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-
+// Helper to attempt a single OpenRouter API request with a specific model
+async function attemptOpenRouterCall(apiUrl, model, resumeText, jobDescription) {
   const systemInstruction = `You are a world-class senior tech recruiter, hiring manager, and LaTeX typesetting expert.
 Your job is to analyze a candidate's resume against a target job description and tailor the resume so that:
 1. It passes any applicant tracking system (ATS) parser without layout or text bugs (clean single-column format).
@@ -1039,7 +1037,7 @@ ${resumeText}
 Analyze this resume against the job description and output the complete JSON object containing recommendations and the fully tailored LaTeX resume code.`;
 
   const requestBody = {
-    model: openrouterModelName,
+    model: model,
     messages: [
       {
         role: "system",
@@ -1084,6 +1082,44 @@ Analyze this resume against the job description and output the complete JSON obj
     console.error(`Failed to parse response from OpenRouter:`, jsonResponse, err);
     throw new Error('OpenRouter API returned an invalid JSON response. Please try again.');
   }
+}
+
+// Call OpenRouter API to analyze the resume and generate the Overleaf LaTeX template
+async function callOpenRouterApi(resumeText, jobDescription) {
+  const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+  const allFallbacks = [
+    openrouterModelName,
+    'google/gemini-2.0-flash',
+    'qwen/qwen-2.5-72b-instruct:free',
+    'deepseek/deepseek-r1:free',
+    'meta-llama/llama-3.3-70b-instruct:free',
+    'google/gemini-2.0-flash-exp:free',
+    'google/gemini-2.0-lite-preview:free',
+    'nvidia/llama-3.1-nemotron-70b-instruct:free',
+    'meta-llama/llama-3-8b-instruct:free'
+  ];
+
+  // Remove duplicates
+  const modelsToTry = [...new Set(allFallbacks)].filter(m => m);
+  let lastError = null;
+
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const currentModel = modelsToTry[i];
+    try {
+      console.log(`Attempting OpenRouter analysis with model: ${currentModel} (${i + 1}/${modelsToTry.length})...`);
+      const response = await attemptOpenRouterCall(apiUrl, currentModel, resumeText, jobDescription);
+      return response;
+    } catch (err) {
+      lastError = err;
+      console.warn(`OpenRouter model ${currentModel} failed: ${err.message}. Trying next fallback...`);
+      if (i === modelsToTry.length - 1) {
+        throw err;
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 // Render the results into the HTML UI
